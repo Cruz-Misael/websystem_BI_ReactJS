@@ -1,7 +1,8 @@
+// UserDashboard.js (Versão Atualizada para SSO)
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/UserDashboard.css'; // mesma estilização do Dashboard principal
-import logo from '../assets/sebraFundoBranco.jpg'; // logo do Power BI
+import '../styles/UserDashboard.css';
+import logo from '../assets/sebraFundoBranco.jpg'; 
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -14,6 +15,7 @@ const UserDashboard = () => {
 
   const fetchDashboards = useCallback(async (team) => {
     try {
+      // Continua buscando dashboards pelo time, como já estava
       const response = await fetch(`${API_BASE_URL}/dashboard/team/${team}`);
       const data = await response.json();
       setDashboards(data);
@@ -28,7 +30,8 @@ const UserDashboard = () => {
     const team = localStorage.getItem("team");
 
     if (!email || !level || !team) {
-      navigate('/login');
+      // Redireciona para a nova tela de login SSO
+      navigate('/login-sso'); 
     } else {
       setUserEmail(email);
       setAccessLevel(level);
@@ -38,11 +41,21 @@ const UserDashboard = () => {
   }, [fetchDashboards, navigate]);
 
   const logout = () => {
+    // Limpa o localStorage
     localStorage.removeItem("userEmail");
     localStorage.removeItem("accessLevel");
     localStorage.removeItem("team");
-    navigate('/login');
+    
+    // Desloga do Google Identity Services (opcional, mas recomendado)
+    if (window.google && window.google.accounts.id) {
+        window.google.accounts.id.disableAutoSelect();
+    }
+    
+    navigate('/login-sso');
   };
+
+  // ... (Restante do código do UserDashboard, incluindo goToConfig, DashboardAdmin, Teams, openFullscreen)
+  // A lógica de permissão (accessLevel === "Admin") permanece a mesma.
 
   const goToConfig = () => {
     if (accessLevel === "Admin") {
@@ -55,14 +68,6 @@ const UserDashboard = () => {
   const DashboardAdmin = useCallback(() => {
     if (accessLevel === "Admin") {
       navigate('/dashboard-admin');
-    } else {
-      alert("Acesso negado!");
-    }
-  }, [accessLevel, navigate]);
-
-  const UserDashboardView = useCallback(() => {
-    if (accessLevel === "Admin") {
-      navigate('/user-dashboard');
     } else {
       alert("Acesso negado!");
     }
@@ -122,7 +127,7 @@ const UserDashboard = () => {
                     src={dash.url}
                     title={dash.title}
                     allowFullScreen/>
-                )}
+                 )}
               </div>
             ))
           ) : (
@@ -133,7 +138,7 @@ const UserDashboard = () => {
 
       <footer className="footer-content">
         <h4>
-          {userEmail} | Para acessar as dashboards, utilize a credencial: SebratelTecnologiaLTDA@sebratel.onmicrosoft.com
+          {userEmail} | Acesso via Google SSO.
         </h4>
       </footer>
     </div>
