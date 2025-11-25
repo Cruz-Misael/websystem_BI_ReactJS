@@ -1,6 +1,4 @@
 /* src/styles/UserSettings.css */
-
-/* Estilização específica para a página */
 body {
   margin: 0;
   padding: 0;
@@ -31,6 +29,11 @@ body {
   width: 100%;
   z-index: 1000;
   box-sizing: border-box;
+}
+
+.header-logo {
+  height: 40px; /* Um pouco menor para header fino */
+  width: auto;
 }
 
 .back-button {

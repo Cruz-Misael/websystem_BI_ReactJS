@@ -1,90 +1,219 @@
-/* Container da tela de login */
+/* Login.css - Versão modernizada com design system da dashboard */
+
+:root {
+  /* Mesmas variáveis da dashboard */
+  --sebratel-red: #E30613;
+  --sebratel-yellow: #FFD100;
+  --sebratel-red-dark: #C10511;
+  --sebratel-yellow-dark: #E6BC00;
+  --neutral-50: #F9FAFB;
+  --neutral-100: #F3F4F6;
+  --neutral-200: #E5E7EB;
+  --neutral-500: #6B7280;
+  --neutral-700: #2f3346;
+  --neutral-900: #111827;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+}
+
+/* Layout principal */
+.login-layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--neutral-50) 0%, var(--neutral-100) 100%);
+  z-index: -1;
+}
+
 .login-container {
-    background: rgba(0, 0, 0, 0.6);
-    padding: 20px;
-    justify-content: center ;
-    align-items: center ;
-    border-radius: 8px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
-    width: 400px;
-    text-align: center !important;
+  width: 100%;
+  max-width: 440px;
+  padding: var(--space-lg);
 }
 
-.login-container img {
-    width: 250px;
-    margin-bottom: -50px;
+/* Card moderno */
+.login-card-modern {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid var(--neutral-200);
+  transition: all 0.3s ease;
 }
 
-.login-container h3 {
-    align-items: flex-start; /* Isso não funciona aqui, talvez você queira text-align ou outro ajuste */
+.login-card-modern:hover {
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
-.login-container input {
-    width: 90%;
-    padding: 10px;
-    margin: 10px 0;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
+/* Header do card */
+.login-card-header {
+  background: linear-gradient(135deg, #e9c600 0%, #f8dc3e 100%);
+  padding: var(--space-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
-.login-container h2 {
-    color:#fff
+.login-logo {
+  height: 80px;
+  width: auto;
 }
 
-.login-container label {
-    color:#fff !important;
+.login-header-text {
+  color: white;
 }
 
-.login-button {
-    width: 100%;
-    padding: 10px;
-    background: #c02525;
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background 0.3s;
+.login-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: var(--sebratel-red);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-
-.register-button {
-    width: 80%;
-    padding: 10px;
-    background: #003f8a;
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background 0.3s;
-    margin-top: 5px;
+/* Conteúdo principal */
+.login-card-content {
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
 }
 
-.login-button:hover {
-    background: #a08a8c;
+.card-title-modern {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--neutral-900);
+  margin-bottom: var(--space-sm);
+  background: black;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.register-button:hover {
-    background: #a08a8c;
+.card-subtitle-modern {
+  color: var(--neutral-500);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-lg);
+  line-height: 1.5;
 }
 
-.error-message {
-    color: red;
-    font-size: 0.9em;
-    margin-top: 10px;
+/* Container do botão Google */
+.google-button-container {
+  margin: var(--space-lg) 0;
+  display: flex;
+  justify-content: center;
 }
 
-/* Logo da empresa */
-.logo {
-    width: 150px;
-    margin-bottom: 20px;
+.google-sso-button-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+/* Features list */
+.login-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: var(--space-lg);
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0.75rem;
+  background: var(--neutral-50);
+  border-radius: 10px;
+  color: var(--neutral-700);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  background: var(--neutral-100);
+  transform: translateX(5px);
+}
+
+.feature-icon {
+  color: #D4AF37;
+  width: 20px;
+  text-align: center;
+}
+
+/* Footer do card */
+.login-card-footer {
+  padding: var(--space-md);
+  background: var(--neutral-50);
+  border-top: 1px solid var(--neutral-200);
+  text-align: center;
+}
+
+.info-message-footer {
+  font-size: 0.8rem;
+  color: var(--neutral-500);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.info-message-footer i {
+  color: #D4AF37;
 }
 
 /* Responsividade */
-@media (max-width: 400px) {
-    .login-container {
-        width: 90%;
-    }
+@media (max-width: 768px) {
+  .login-container {
+    padding: var(--space-md);
+    max-width: 100%;
+  }
+  
+  .login-card-header {
+    padding: var(--space-md);
+  }
+  
+  .login-card-content {
+    padding: var(--space-lg) var(--space-md);
+  }
+  
+  .login-features {
+    gap: 0.5rem;
+  }
+  
+  .feature-item {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Animações */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-card-modern {
+  animation: fadeInUp 0.6s ease-out;
 }

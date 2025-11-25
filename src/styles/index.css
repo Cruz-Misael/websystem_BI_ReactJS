@@ -4,17 +4,7 @@ html {
   margin: 0;
   padding: 0;
 }
-body {
-  margin: 0;
-  font-family: Arial, sans-serif; /* Mesma fonte do login */
-  background: url('../assets/605743.jpg') no-repeat center center fixed; /* Mesmo fundo do login */
-  background-size: cover; /* Faz a imagem cobrir toda a tela */
-  color: #fff; /* Mesma cor de texto */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh; /* Mesmo alinhamento central */
-}
+
 .container {
   width: 100%;
   max-width: 1200px; /* Largura máxima para telas grandes */
