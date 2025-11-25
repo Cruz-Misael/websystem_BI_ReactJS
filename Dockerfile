@@ -1,22 +1,23 @@
-# executar para rodar na sua máquina: docker-compose up 
+# Etapa 1 - Build do React
+FROM node:18 AS build
 
-# Etapa única de desenvolvimento com hot reload
-FROM node:18
-
-# Criar diretório de trabalho
 WORKDIR /app
 
-# Copiar arquivos de dependência
 COPY package.json package-lock.json ./
-
-# Instalar dependências
 RUN npm install
 
-# Copiar o restante dos arquivos do projeto
 COPY . .
+RUN npm run build
 
-# Expor a porta padrão do dev server
-EXPOSE 3000
+# Etapa 2 - Servir com Nginx
+FROM nginx:alpine
 
-# Comando para iniciar o React com hot reload
-CMD ["npm", "start"]
+# Copia o build do React para a pasta pública do nginx
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Copia configuração customizada (opcional)
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
