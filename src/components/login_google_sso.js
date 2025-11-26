@@ -55,29 +55,43 @@ const LoginGoogleSSO = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (!window.google) {
-      console.error("Google Identity Services não carregou!");
-      return;
-    }
+    let attempts = 0;
 
-    console.log("Google Identity Services carregado!");
+    const waitForGoogle = setInterval(() => {
+      attempts++;
 
-    window.google.accounts.id.initialize({
-      client_id: GOOGLE_CLIENT_ID,
-      callback: handleCredentialResponse,
-    });
+      // Se o GIS carregou, inicializa
+      if (window.google && window.google.accounts?.id) {
+        console.log("Google Identity Services pronto!");
 
-    window.google.accounts.id.renderButton(
-      document.getElementById("google-sign-in-button"),
-      {
-        theme: "outline",
-        size: "large",
-        shape: "pill",
-        width: 300
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleCredentialResponse,
+        });
+
+        window.google.accounts.id.renderButton(
+          document.getElementById("google-sign-in-button"),
+          {
+            theme: "outline",
+            size: "large",
+            shape: "pill",
+            width: 300
+          }
+        );
+
+        clearInterval(waitForGoogle);
       }
-    );
 
+      // Falha após 4 segundos
+      if (attempts > 20) {
+        console.error("Google Identity Services não carregou a tempo.");
+        clearInterval(waitForGoogle);
+      }
+    }, 200);
+
+    return () => clearInterval(waitForGoogle);
   }, [handleCredentialResponse]);
+
 
   return (
     <div className="login-layout">
