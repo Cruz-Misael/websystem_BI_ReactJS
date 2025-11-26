@@ -98,30 +98,71 @@
 /* Tabela de Times */
 .teams-table-container {
   overflow-x: auto;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--neutral-200);
+  background: white;
 }
 
 .teams-table {
   width: 100%;
   border-collapse: collapse;
   background: white;
+  font-size: 0.85rem;
 }
 
 .teams-table th {
   background: var(--neutral-50);
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: left;
   font-weight: 600;
   color: var(--neutral-700);
-  border-bottom: 2px solid var(--neutral-200);
-  font-size: 0.9rem;
+  border-bottom: 1px solid var(--neutral-200);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .teams-table td {
-  padding: 1rem;
-  border-bottom: 1px solid var(--neutral-200);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--neutral-100);
   color: var(--neutral-600);
+  vertical-align: middle;
+}
+
+.team-name {
+  font-weight: 600;
+  color: var(--neutral-800);
+  font-size: 0.9rem;
+}
+
+.team-description {
+  max-width: 250px;
+  word-wrap: break-word;
+  line-height: 1.4;
+  color: var(--neutral-500);
+}
+
+/* Linhas alternadas para melhor legibilidade */
+.teams-table tbody tr:nth-child(even) {
+  background-color: var(--neutral-25);
+}
+
+.teams-table tbody tr:hover {
+  background-color: var(--neutral-100);
+  transition: background-color 0.2s ease;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 768px) {
+  .teams-table th,
+  .teams-table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .team-description {
+    max-width: 200px;
+  }
 }
 
 .team-name {
@@ -260,15 +301,6 @@
   .form-actions {
     flex-direction: column;
     align-items: stretch;
-  }
-  
-  .teams-table-container {
-    font-size: 0.8rem;
-  }
-  
-  .teams-table th,
-  .teams-table td {
-    padding: 0.75rem 0.5rem;
   }
   
   .action-buttons {
