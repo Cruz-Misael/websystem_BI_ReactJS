@@ -1,7 +1,7 @@
 // UserDashboard.js - Versão com Ícone Único de Barras
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/UserDashboard.css';
+import '../styles/user_dashboard.css';
 // Altere o caminho da logo se for diferente
 import logo from '../assets/logo_personalizado.png'; 
 
@@ -88,6 +88,14 @@ const UserDashboard = () => {
         }
     };
 
+    const goToAnalytics = () => {
+        if (accessLevel === "Admin") {
+        navigate('/dashboard-analytics');
+        } else {
+            alert("Acesso negado! Apenas administradores podem acessar a página de configurações.");
+        }
+    };
+
     const DashboardAdmin = useCallback(() => {
         if (accessLevel === "Admin") {
             navigate('/dashboard-admin');
@@ -104,15 +112,40 @@ const UserDashboard = () => {
         }
     }, [accessLevel, navigate]);
 
-    const openFullscreen = (url) => {
-        try {
-            const newWindow = window.open(url, "_blank", "fullscreen=yes");
-            if (newWindow) newWindow.focus();
-            else alert("Navegador bloqueou o pop-up. Permita para abrir em tela cheia.");
-        } catch (err) {
-            alert("URL inválida.");
-        }
+    const trackDashboardClick = async (dashboardId, dashboardTitle) => {
+    try {
+        await fetch(`${API_BASE_URL}/dashboard/click`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            dashboardId,
+            userEmail: userEmail,
+            userName: userName,
+            userTeam: userTeam,
+            dashboardTitle: dashboardTitle // opcional, para relatórios
+        })
+        });
+    } catch (error) {
+        console.error('Erro ao registrar click:', error);
+        // Não interrompe o fluxo se o tracking falhar
+    }
     };
+
+    const openFullscreen = (url, dashboardId, dashboardTitle) => {
+    // Registra o click antes de abrir
+    trackDashboardClick(dashboardId, dashboardTitle);
+    
+    try {
+        const newWindow = window.open(url, "_blank", "fullscreen=yes");
+        if (newWindow) newWindow.focus();
+        else alert("Navegador bloqueou o pop-up. Permita para abrir em tela cheia.");
+    } catch (err) {
+        alert("URL inválida.");
+    }
+};
+
 
     const getUserInitial = (name) => {
         return name ? name.charAt(0).toUpperCase() : '?';
@@ -172,17 +205,20 @@ const UserDashboard = () => {
                     </button>
                     
                     {accessLevel === "Admin" && (
-                        <>
-                            <button className="nav-btn" onClick={DashboardAdmin}>
-                                <i className="fas fa-cog"></i> Gerenciar Dashboards
-                            </button>
-                            <button className="nav-btn" onClick={Teams}>
-                                <i className="fas fa-users"></i> Gerenciar Setores
-                            </button>
-                            <button className="nav-btn" onClick={goToConfig}>
-                                <i className="fas fa-user-lock"></i> Gerenciar Usuários
-                            </button>
-                        </>
+                    <>
+                        <button className="nav-btn" onClick={DashboardAdmin}>
+                            <i className="fas fa-cog"></i> Gerenciar Dashboards
+                        </button>
+                        <button className="nav-btn" onClick={Teams}>
+                            <i className="fas fa-users"></i> Gerenciar Setores
+                        </button>
+                        <button className="nav-btn" onClick={goToConfig}>
+                            <i className="fas fa-user-lock"></i> Gerenciar Usuários
+                        </button>
+                        <button className="nav-btn" onClick={goToAnalytics}>
+                            <i className="fas fa-analytics"></i> Analytics
+                        </button>
+                    </>
                     )}
                 </nav>
                 
@@ -259,39 +295,39 @@ const UserDashboard = () => {
                             </button>
                         </div>
                     ) : dashboards.length > 0 ? (
-                        <section className="promo-cards-grid">
-                            {dashboards.map((dash, index) => (
-                                <div 
-                                    key={dash.id} 
-                                    className="dashboard-card" 
-                                    onClick={() => openFullscreen(dash.url)}
-                                    style={{ animationDelay: `${index * 0.1}s` }}
-                                >
-                                    <div className="card-preview">
-                                        <DashboardVisual />
-                                    </div>
-                                    <div className="card-info">
-                                        <h3 className="card-title-text">{dash.title}</h3>                                        
-                                        <div className="card-meta">
-                                            <div className="meta-item">
-                                                <i className="fas fa-chart-bar"></i>
-                                            </div>
-                                            <div className="meta-item">
-                                                <i className="fas fa-clock"></i>
-                                                <span>{dash.description}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        <button className="card-action-btn" onClick={(e) => {
-                                            e.stopPropagation();
-                                            openFullscreen(dash.url);
-                                        }}>
-                                            Abrir em Tela Cheia <i className="fas fa-external-link-alt"></i>
-                                        </button>
-                                    </div>
+                    <section className="promo-cards-grid">
+                        {dashboards.map((dash, index) => (
+                            <div 
+                                key={dash.id} 
+                                className="dashboard-card" 
+                                onClick={() => openFullscreen(dash.url, dash.id, dash.title)}
+                                style={{ animationDelay: `${index * 0.1}s` }}
+                            >
+                                <div className="card-preview">
+                                    <DashboardVisual />
                                 </div>
-                            ))}
-                        </section>
+                                <div className="card-info">
+                                    <h3 className="card-title-text">{dash.title}</h3>                                        
+                                    <div className="card-meta">
+                                        <div className="meta-item">
+                                            <i className="fas fa-chart-bar"></i>
+                                        </div>
+                                        <div className="meta-item">
+                                            <i className="fas fa-clock"></i>
+                                            <span>{dash.description}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <button className="card-action-btn" onClick={(e) => {
+                                        e.stopPropagation();
+                                        openFullscreen(dash.url, dash.id, dash.title); // ← CORRIGIDO AQUI
+                                    }}>
+                                        Abrir em Tela Cheia <i className="fas fa-external-link-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </section>
                     ) : (
                         <div className="no-dashboards-message">
                             <i className="fas fa-info-circle"></i> 

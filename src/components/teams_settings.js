@@ -1,7 +1,7 @@
 // Teams.js - Versão com Layout Padronizado
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Teams.css';
+import '../styles/teams_settings.css';
 import logo from '../assets/logo_personalizado.png';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -58,6 +58,14 @@ function Teams() {
             navigate('/dashboard-admin');
         } else {
             alert("Acesso negado! Apenas administradores podem acessar.");
+        }
+    };
+
+    const goToAnalytics = () => {
+        if (accessLevel === "Admin") {
+        navigate('/dashboard-analytics');
+        } else {
+        showErrorModal("Acesso negado! Apenas administradores podem acessar a página de configurações.");
         }
     };
 
@@ -284,17 +292,20 @@ function Teams() {
                     </button>
                     
                     {accessLevel === "Admin" && (
-                        <>
-                            <button className="nav-btn" onClick={goToDashboardAdmin}>
-                                <i className="fas fa-cog"></i> Gerenciar Dashboards
-                            </button>
-                            <button className="nav-btn active">
-                                <i className="fas fa-users"></i> Gerenciar Setores
-                            </button>
-                            <button className="nav-btn" onClick={goToUserSettings}>
-                                <i className="fas fa-user-lock"></i> Gerenciar Usuários
-                            </button>
-                        </>
+                    <>
+                        <button className="nav-btn" onClick={goToDashboardAdmin}>
+                            <i className="fas fa-cog"></i> Gerenciar Dashboards
+                        </button>
+                        <button className="nav-btn active">
+                            <i className="fas fa-users"></i> Gerenciar Setores
+                        </button>
+                        <button className="nav-btn" onClick={goToUserSettings}>
+                            <i className="fas fa-user-lock"></i> Gerenciar Usuários
+                        </button>
+                        <button className="nav-btn" onClick={goToAnalytics}>
+                            <i className="fas fa-analytics"></i> Analytics
+                        </button>
+                    </>
                     )}
                 </nav>
                 

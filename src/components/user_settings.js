@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import '../styles/UserSettings.css';
+import '../styles/user_settings.css';
 import logo from '../assets/logo_personalizado.png';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -84,6 +84,14 @@ const UserSettings = () => {
 
   const goToTeams = () => {
     navigate('/teams');
+  };
+
+  const goToAnalytics = () => {
+    if (accessLevel === "Admin") {
+      navigate('/dashboard-analytics');
+    } else {
+      showErrorModal("Acesso negado! Apenas administradores podem acessar a página de configurações.");
+    }
   };
 
   const DashboardUser = () => {
@@ -274,7 +282,7 @@ const UserSettings = () => {
             </div>
           )}
           <h3 className="profile-name">{userName || userEmail}</h3>
-          <p className="profile-team">Time: {userTeam}</p>
+          <p className="profile-team">Setor: {userTeam}</p>
           <hr className="profile-divider" />
         </div>
 
@@ -293,6 +301,9 @@ const UserSettings = () => {
               </button>
               <button className="nav-btn active">
                 <i className="fas fa-user-lock"></i> Gerenciar Usuários
+              </button>
+              <button className="nav-btn" onClick={goToAnalytics}>
+                  <i className="fas fa-analytics"></i> Analytics
               </button>
             </>
           )}

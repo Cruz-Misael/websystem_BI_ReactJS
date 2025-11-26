@@ -2,7 +2,7 @@
 import React from 'react'; 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/DashboardAdmin.css';
+import '../styles/dashboard_admin.css';
 import logo from '../assets/logo_personalizado.png';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
@@ -82,6 +82,14 @@ function DashboardAdmin() {
   const goToConfig = () => {
     if (accessLevel === "Admin") {
       navigate('/user-settings');
+    } else {
+      showErrorModal("Acesso negado! Apenas administradores podem acessar a página de configurações.");
+    }
+  };
+
+  const goToAnalytics = () => {
+    if (accessLevel === "Admin") {
+      navigate('/dashboard-analytics');
     } else {
       showErrorModal("Acesso negado! Apenas administradores podem acessar a página de configurações.");
     }
@@ -474,6 +482,9 @@ function DashboardAdmin() {
               </button>
               <button className="nav-btn" onClick={goToConfig}>
                 <i className="fas fa-user-lock"></i> Gerenciar Usuários
+              </button>
+              <button className="nav-btn" onClick={goToAnalytics}>
+                  <i className="fas fa-analytics"></i> Analytics
               </button>
             </>
           )}

@@ -1,7 +1,7 @@
 // LoginGoogleSSO.jsx — Versão modernizada com design system da dashboard
 import React, { useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/Login.css";
+import "../styles/login_google_sso.css";
 import logo from "../assets/logo_personalizado.png";
 import {
   GoogleAuthProvider,

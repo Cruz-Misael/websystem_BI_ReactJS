@@ -1,14 +1,12 @@
 // App.js (Versão Modificada para Google SSO)
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-// Importe o novo componente de login SSO
-import LoginSSO from './components/LoginGoogleSSO'; // ASSUMIDO: Novo componente de login SSO
-// Os componentes de administração e dashboard permanecem
-import UserSettings from './components/UserSettings';
-// import Register from './components/Register'; // REMOVIDO: Não é mais necessário
-import DashboardAdmin from './components/DashboardAdmin';
-import UserDashboard from './components/UserDashboard';
-import Teams from './components/Teams';
+import LoginSSO from './components/login_google_sso';
+import UserSettings from './components/user_settings';
+import DashboardAdmin from './components/dashboard_admin';
+import UserDashboard from './components/user_dashboard';
+import Teams from './components/teams_settings';
+import DashboardClicks from './components/dashboard_clicks';
 
 // Rota protegida - Permanece inalterada, pois a lógica de autenticação (localStorage) é a mesma
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -49,16 +47,14 @@ function App() {
         {/* Rota de Login: Usa o novo componente LoginSSO */}
         <Route path="/login" element={
           <AuthRoute>
-            <LoginSSO /> {/* SUBSTITUÍDO: Login -> LoginSSO */}
+            <LoginSSO />
           </AuthRoute>
         } />
 
         {/* Rota de Registro: REMOVIDA ou APONTADA para o LoginSSO */}
-        {/* Se você quiser manter a rota /register, pode apontá-la para o login */}
         <Route path="/register" element={
           <Navigate to="/login" replace />
         } />
-        {/* OU SIMPLESMENTE REMOVA A ROTA /register */}
 
         {/* Rotas Protegidas (Admin) - Permanecem inalteradas */}
         <Route path="/user-settings" element={
@@ -76,6 +72,13 @@ function App() {
         <Route path="/teams" element={
           <ProtectedRoute adminOnly>
             <Teams />
+          </ProtectedRoute>
+        } />
+
+        {/* NOVA ROTA: Analytics de Cliques (Apenas Admin) */}
+        <Route path="/dashboard-analytics" element={
+          <ProtectedRoute adminOnly>
+            <DashboardClicks />
           </ProtectedRoute>
         } />
 
