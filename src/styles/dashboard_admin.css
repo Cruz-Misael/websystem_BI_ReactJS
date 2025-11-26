@@ -62,20 +62,20 @@
 
 .form-input,
 .form-textarea {
-  padding: 0.75rem;
-  border: 1px solid var(--neutral-300);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: all 0.3s ease;
-  background: white;
+  padding: 0.75rem !important;
+  border: 2px solid #ebebeb !important;
+  border-radius: 8px !important;
+  background: white !important;
 }
+
 
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
   border-color: #D4AF37;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.25);
 }
+
 
 .form-textarea {
   resize: vertical;
@@ -84,7 +84,7 @@
 
 /* Botões */
 .primary-btn {
-  background: linear-gradient(135deg, #B8860B 0%, #B8860B 50%, #D4AF37 100%);
+  background: linear-gradient(135deg, #B8860B 0%, #B8860B 50%, #D4AF37 100%) !important;
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -440,7 +440,7 @@
 .filter-input,
 .filter-select {
   padding: 0.75rem;
-  border: 1px solid var(--neutral-300);
+  border: 2px solid #ebebeb !important;
   border-radius: 8px;
   font-size: 0.9rem;
   transition: all 0.3s ease;

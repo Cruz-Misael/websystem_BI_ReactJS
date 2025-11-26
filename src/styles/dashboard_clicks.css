@@ -28,8 +28,8 @@
 }
 
 .stat-icon {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -186,4 +186,158 @@
     .chart-container {
         min-width: auto;
     }
+}
+
+
+/* ===== GRUPED BAR CHART STYLES ===== */
+.grouped-chart {
+    min-height: 400px;
+}
+
+.chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm);
+    background: var(--neutral-50);
+    border-radius: 8px;
+    border: 1px solid var(--neutral-200);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: 0.8rem;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.legend-label {
+    color: var(--neutral-700);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.grouped-bars-container {
+    overflow-x: auto;
+    padding: var(--space-sm) 0;
+}
+
+.bars-scroll {
+    display: flex;
+    gap: var(--space-md);
+    min-width: max-content;
+}
+
+.month-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 80px;
+}
+
+.month-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--neutral-700);
+    text-align: center;
+    writing-mode: horizontal-tb;
+    margin-bottom: var(--space-xs);
+}
+
+.bars-group {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 200px;
+    padding: 0 var(--space-xs);
+}
+
+.bar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 30px;
+}
+
+.bar-wrapper {
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    width: 25px;
+}
+
+.grouped-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    transition: all 0.3s ease;
+    min-height: 3px;
+    cursor: pointer;
+    position: relative;
+}
+
+.grouped-bar:hover {
+    opacity: 0.8;
+    transform: scaleY(1.05);
+}
+
+.bar-value-small {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--neutral-600);
+    text-align: center;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .chart-legend {
+        gap: var(--space-xs);
+    }
+    
+    .legend-label {
+        max-width: 80px;
+        font-size: 0.75rem;
+    }
+    
+    .bars-group {
+        height: 150px;
+    }
+    
+    .bar-wrapper {
+        width: 20px;
+    }
+    
+    .month-group {
+        min-width: 60px;
+    }
+}
+
+/* Scroll personalizado */
+.grouped-bars-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.grouped-bars-container::-webkit-scrollbar-track {
+    background: var(--neutral-100);
+    border-radius: 4px;
+}
+
+.grouped-bars-container::-webkit-scrollbar-thumb {
+    background: var(--neutral-300);
+    border-radius: 4px;
+}
+
+.grouped-bars-container::-webkit-scrollbar-thumb:hover {
+    background: var(--neutral-400);
 }

@@ -479,7 +479,7 @@ function Teams() {
                                                         title="Excluir time"
                                                     >
                                                         <i className="fas fa-trash"></i>
-                                                        <span>❌</span>
+                                                        <span>Excluir</span>
                                                     </button>
                                                 </td>
                                             </tr>

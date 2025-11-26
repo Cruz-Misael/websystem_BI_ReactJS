@@ -190,6 +190,134 @@ const DashboardClicks = () => {
         return name ? name.charAt(0).toUpperCase() : '?';
     };
 
+    const getDashboardClicksByMonth = () => {
+        const monthlyData = {};
+        const allDashboards = new Set();
+        const allMonths = new Set();
+
+        // Processa todos os cliques
+        clickData.forEach(click => {
+            const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
+            const monthKey = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
+            const dashboardName = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
+
+            allDashboards.add(dashboardName);
+            allMonths.add(monthKey);
+
+            if (!monthlyData[monthKey]) {
+                monthlyData[monthKey] = {};
+            }
+
+            if (!monthlyData[monthKey][dashboardName]) {
+                monthlyData[monthKey][dashboardName] = 0;
+            }
+
+            monthlyData[monthKey][dashboardName]++;
+        });
+
+        // Ordena os meses
+        const sortedMonths = Array.from(allMonths).sort((a, b) => {
+            const [mA, yA] = a.split('/');
+            const [mB, yB] = b.split('/');
+            const dateA = new Date(`${yA}-${mA}-01`);
+            const dateB = new Date(`${yB}-${mB}-01`);
+            return dateA - dateB;
+        });
+
+        // Ordena os dashboards por nome
+        const sortedDashboards = Array.from(allDashboards).sort();
+
+        return {
+            months: sortedMonths,
+            dashboards: sortedDashboards,
+            data: monthlyData
+        };
+    };
+
+    const GroupedBarChart = ({ title }) => {
+        const { months, dashboards, data } = getDashboardClicksByMonth();
+
+        if (months.length === 0 || dashboards.length === 0) {
+            return (
+                <div className="chart-container">
+                    <h4>{title}</h4>
+                    <div className="no-data">Sem dados para exibir</div>
+                </div>
+            );
+        }
+
+        // Encontra o valor máximo para escalar as barras
+        let maxValue = 0;
+        months.forEach(month => {
+            dashboards.forEach(dashboard => {
+                const value = data[month]?.[dashboard] || 0;
+                maxValue = Math.max(maxValue, value);
+            });
+        });
+
+        // Cores para as barras (pode personalizar)
+        const colors = [
+            'linear-gradient(135deg, #FF6B6B, #EE5A52)',
+            'linear-gradient(135deg, #4ECDC4, #45B7AF)',
+            'linear-gradient(135deg, #FFD166, #FFC857)',
+            'linear-gradient(135deg, #06D6A0, #05C191)',
+            'linear-gradient(135deg, #118AB2, #0F7A9D)',
+            'linear-gradient(135deg, #073B4C, #052E3A)',
+            'linear-gradient(135deg, #7209B7, #5A0792)',
+            'linear-gradient(135deg, #F15BB5, #D14A9E)',
+            'linear-gradient(135deg, #00BBF9, #00A5E0)',
+            'linear-gradient(135deg, #9B5DE5, #7D46C7)'
+        ];
+
+        return (
+            <div className="chart-container grouped-chart">
+                <h4>{title}</h4>
+                <div className="chart-legend">
+                    {dashboards.map((dashboard, index) => (
+                        <div key={dashboard} className="legend-item">
+                            <div 
+                                className="legend-color" 
+                                style={{ background: colors[index % colors.length] }}
+                            ></div>
+                            <span className="legend-label">{dashboard}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="grouped-bars-container">
+                    <div className="bars-scroll">
+                        {months.map(month => (
+                            <div key={month} className="month-group">
+                                <div className="month-label">{month}</div>
+                                <div className="bars-group">
+                                    {dashboards.map((dashboard, index) => {
+                                        const value = data[month]?.[dashboard] || 0;
+                                        const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                                        
+                                        return (
+                                            <div key={dashboard} className="bar-container">
+                                                <div className="bar-wrapper">
+                                                    <div 
+                                                        className="grouped-bar"
+                                                        style={{ 
+                                                            height: `${percentage}%`,
+                                                            background: colors[index % colors.length]
+                                                        }}
+                                                        title={`${dashboard}: ${value} cliques`}
+                                                    ></div>
+                                                </div>
+                                                <div className="bar-value-small">{value}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // =========================================================
     // 2. USE EFFECT
     // =========================================================
@@ -458,7 +586,7 @@ const DashboardClicks = () => {
                     ) : (
                         <div className="analytics-content">
                             {/* Cards de Estatísticas */}
-                            <div className="stats-grid">
+                            <div className="stats-grid compact-stats">
                                 <StatCard 
                                     title="Total de Cliques" 
                                     value={stats.totalClicks} 
@@ -498,6 +626,9 @@ const DashboardClicks = () => {
                                 <SimpleBarChart 
                                     data={getClicksByMonth()} 
                                     title="Cliques por Mês"
+                                />
+                                <GroupedBarChart 
+                                    title="Cliques por Mês e Dashboard"
                                 />
                             </div>
 
