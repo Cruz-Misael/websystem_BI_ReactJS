@@ -44,21 +44,28 @@ const UserDashboard = () => {
     // 1. FUNÇÕES DE BUSCA E LÓGICA
     // =========================================================
 
-    const fetchDashboards = useCallback(async (team) => {
+    const fetchDashboards = useCallback(async (email) => { // Mudei team para email
         setIsLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/dashboard/team/${team}`);
+            // MUDEI A URL para buscar por email
+            const response = await fetch(`${API_BASE_URL}/dashboard/email/${email}`);
             if (!response.ok) {
                 throw new Error('Falha ao carregar dashboards');
             }
             const data = await response.json();
-            setDashboards(data);
-            setDashboardCount(data.length); // Atualiza a contagem
+            
+            // A API retorna { success: true, dashboards: array }
+            if (data.success) {
+                setDashboards(data.dashboards || []);
+                setDashboardCount(data.dashboards?.length || 0);
+            } else {
+                throw new Error(data.message || 'Erro ao carregar dashboards');
+            }
         } catch (error) {
             console.error("Erro ao buscar dashboards:", error);
             setError('Não foi possível carregar os dashboards. Tente novamente mais tarde.');
-            setDashboardCount(0); // Zera a contagem em caso de erro
+            setDashboardCount(0);
         } finally {
             setIsLoading(false);
         }
@@ -113,24 +120,22 @@ const UserDashboard = () => {
     }, [accessLevel, navigate]);
 
     const trackDashboardClick = async (dashboardId, dashboardTitle) => {
-    try {
-        await fetch(`${API_BASE_URL}/dashboard/click`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            dashboardId,
-            userEmail: userEmail,
-            userName: userName,
-            userTeam: userTeam,
-            dashboardTitle: dashboardTitle // opcional, para relatórios
-        })
-        });
-    } catch (error) {
-        console.error('Erro ao registrar click:', error);
-        // Não interrompe o fluxo se o tracking falhar
-    }
+        try {
+            await fetch(`${API_BASE_URL}/dashboard/click`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    dashboardID: dashboardId, // Mudei para dashboardID (conforme seu backend)
+                    userEmail: userEmail,
+                    // Removi userName e userTeam se não forem obrigatórios no backend
+                    dashboardTitle: dashboardTitle
+                })
+            });
+        } catch (error) {
+            console.error('Erro ao registrar click:', error);
+        }
     };
 
     const openFullscreen = (url, dashboardId, dashboardTitle) => {
@@ -162,17 +167,31 @@ const UserDashboard = () => {
         const name = localStorage.getItem("name");
         const photoUrl = localStorage.getItem("photoUrl");
 
-        if (!email || !level || !team) {
+        console.log('🔍 Dados do SSO:', { email, level, team, name });
+
+        if (!email || !level) {
             navigate('/login-sso');
         } else {
             setUserEmail(email);
             setAccessLevel(level);
-            setUserTeam(team);
-            setUserName(name);
+            
+            // Mantém o setor do SSO se existir, senão usa fallback
+            if (team) {
+                setUserTeam(team);
+            } else {
+                // Fallback: extrai do email ou usa padrão
+                const domain = email.split('@')[1];
+                const fallbackTeam = domain ? `Setor ${domain.split('.')[0]}` : 'Geral';
+                setUserTeam(fallbackTeam);
+            }
+            
+            setUserName(name || email.split('@')[0]);
+            
             if (photoUrl && photoUrl !== 'PLACEHOLDER_INITIAL') {
                 setUserPhotoUrl(photoUrl);
             }
-            fetchDashboards(team);
+            
+            fetchDashboards(email);
         }
     }, [fetchDashboards, navigate]);
 
@@ -193,8 +212,8 @@ const UserDashboard = () => {
                             {getUserInitial(userName)}
                         </div>
                     )}
-                    <h3 className="profile-name">{userName || userEmail}</h3>
-                    <p className="profile-team">Setor: {userTeam}</p>
+                    <h3 className="profile-name">{userName}</h3>
+                    <p className="profile-team">Nível: {accessLevel}</p>
                     <hr className="profile-divider" />
                 </div>
 
@@ -268,7 +287,7 @@ const UserDashboard = () => {
                       <div className="user-menu">
                         <div className="user-info-header">
                           <span className="user-name-header">{userName || userEmail}</span>
-                          <span className="user-role-header">{accessLevel} • {userTeam}</span>
+                          <span className="user-role-header">{accessLevel}</span>
                         </div>
                         {userPhotoUrl && userPhotoUrl !== 'PLACEHOLDER_INITIAL' ? (
                           <img src={userPhotoUrl} alt="User" className="user-avatar-header" />
