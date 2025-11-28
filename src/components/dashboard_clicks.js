@@ -433,56 +433,6 @@ const DashboardClicks = () => {
     // =========================================================
     // 4. RENDERIZAÇÃO
     // =========================================================
-
-    if (accessLevel !== "Admin") {
-        return (
-            <div className="app-layout">
-                <aside className="app-sidebar">
-                    <div className="user-profile">
-                        {userPhotoUrl && userPhotoUrl !== 'PLACEHOLDER_INITIAL' ? (
-                            <img src={userPhotoUrl} alt="Foto do Usuário" className="user-avatar" />
-                        ) : (
-                            <div className="user-avatar user-avatar-initial">
-                                {getUserInitial(userName)}
-                            </div>
-                        )}
-                        <h3 className="profile-name">{userName || userEmail}</h3>
-                        <p className="profile-team">Setor: {userTeam}</p>
-                        <hr className="profile-divider" />
-                    </div>
-
-                    <nav className="sidebar-nav">
-                        <button className="nav-btn" onClick={goToUserDashboard}>
-                            <i className="fas fa-chart-bar"></i> Meus Dashboards
-                        </button>
-                    </nav>
-                    
-                    <button className="logout-btn-sidebar" onClick={logout}>
-                        <i className="fas fa-sign-out-alt"></i> Sair
-                    </button>
-                </aside>
-
-                <div className="main-content">
-                    <header className="main-header">
-                        <div className="header-left">
-                            <h1 className="header-title-text">Analytics de Cliques</h1>
-                        </div>
-                    </header>
-                    
-                    <main className="dashboard-grid-container">
-                        <div className="error-state">
-                            <i className="fas fa-exclamation-triangle"></i>
-                            <p>Acesso restrito a administradores.</p>
-                            <button onClick={goToUserDashboard} className="retry-btn">
-                                Voltar para Dashboards
-                            </button>
-                        </div>
-                    </main>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="app-layout">
             {/* Sidebar (igual ao UserDashboard) */}
@@ -495,8 +445,8 @@ const DashboardClicks = () => {
                             {getUserInitial(userName)}
                         </div>
                     )}
-                    <h3 className="profile-name">{userName || userEmail}</h3>
-                    <p className="profile-team">Setor: {userTeam}</p>
+                    <h3 className="profile-name">{userName}</h3>
+                    <p className="profile-team">Nível: {accessLevel}</p>
                     <hr className="profile-divider" />
                 </div>
 
@@ -507,10 +457,6 @@ const DashboardClicks = () => {
                     
                     <button className="nav-btn" onClick={DashboardAdmin}>
                         <i className="fas fa-cog"></i> Gerenciar Dashboards
-                    </button>
-                    
-                    <button className="nav-btn" onClick={Teams}>
-                        <i className="fas fa-users"></i> Gerenciar Setores
                     </button>
                     
                     <button className="nav-btn" onClick={goToConfig}>
@@ -556,7 +502,7 @@ const DashboardClicks = () => {
             <div className="user-menu">
               <div className="user-info-header">
                 <span className="user-name-header">{userName || userEmail}</span>
-                <span className="user-role-header">{accessLevel} • {userTeam}</span>
+                <span className="user-role-header">{accessLevel}</span>
               </div>
               {userPhotoUrl && userPhotoUrl !== 'PLACEHOLDER_INITIAL' ? (
                 <img src={userPhotoUrl} alt="User" className="user-avatar-header" />

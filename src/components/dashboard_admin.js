@@ -1,4 +1,4 @@
-// DashboardAdmin.js - Versão com Sidebar Completo
+// DashboardAdmin.js - Versão Final Completa
 import React from 'react'; 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,25 +10,21 @@ const API_BASE_URL = process.env.REACT_APP_API_URL;
 function DashboardAdmin() {
   const [dashboards, setDashboards] = useState([]);
   const [filteredDashboards, setFilteredDashboards] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [selectedEmail, setSelectedEmail] = useState(''); 
   const [newDashboard, setNewDashboard] = useState({
     title: '',
     description: '',
     url: '',
     thumbnail: ''
   });
-  const [accessRules, setAccessRules] = useState({});
+  
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingDashboard, setEditingDashboard] = useState(null);
-  
-  // Estados para os filtros
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTeam, setSelectedTeam] = useState('');
   const [sortBy, setSortBy] = useState('title');
-  
-  // NOVOS ESTADOS PARA OS DADOS DO USUÁRIO
   const [userEmail, setUserEmail] = useState('');
   const [accessLevel, setAccessLevel] = useState('');
-  const [userTeam, setUserTeam] = useState('');
   const [userName, setUserName] = useState('');
   const [userPhotoUrl, setUserPhotoUrl] = useState(
     'https://i.ibb.co/68B1zT3/default-avatar.png' 
@@ -42,43 +38,57 @@ function DashboardAdmin() {
     title: '',
     message: '',
     dashboardId: null,
-    team: '',
+    email: '',
     onConfirm: null
   });
 
   useEffect(() => {
-    // PRIMEIRO: Carregar dados do usuário
+    applyFilters();
+  }, [dashboards, searchTerm, sortBy]);
+
+  useEffect(() => {
     const email = localStorage.getItem("userEmail");
     const level = localStorage.getItem("accessLevel");
-    const team = localStorage.getItem("team");
     const name = localStorage.getItem("name");
     const photoUrl = localStorage.getItem("photoUrl");
 
-    if (email && level && team) {
+    if (email && level) {
       setUserEmail(email);
       setAccessLevel(level);
-      setUserTeam(team);
       setUserName(name || '');
       if (photoUrl && photoUrl !== 'PLACEHOLDER_INITIAL') {
         setUserPhotoUrl(photoUrl);
       }
     } else {
-      // Se não tem dados, redireciona para login
       navigate('/login-sso');
       return;
     }
 
-    // DEPOIS: Carregar dashboards e times
     fetchDashboards();
-    fetchTeams();
+    fetchUsers();
   }, [navigate]);
 
-  // Efeito para aplicar filtros
-  useEffect(() => {
-    applyFilters();
-  }, [dashboards, searchTerm, selectedTeam, sortBy]);
+  const openCreateModal = () => {
+    setNewDashboard({ title: '', description: '', url: '', thumbnail: '' });
+    setShowCreateModal(true);
+  };
 
-  // FUNÇÕES DE NAVEGAÇÃO E LOGOUT
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users`);
+      if (!response.ok) throw new Error('Erro ao buscar usuários');
+      const result = await response.json();
+      
+      if (result.success) {
+        setUsers(result.data);
+      } else {
+        throw new Error(result.message || 'Erro ao carregar usuários');
+      }
+    } catch (error) {
+      console.error('Falha ao carregar usuários:', error);
+    }
+  };
+
   const goToConfig = () => {
     if (accessLevel === "Admin") {
       navigate('/user-settings');
@@ -108,14 +118,11 @@ function DashboardAdmin() {
   };
 
   const logout = () => {
-    // Limpa o localStorage
     localStorage.removeItem("userEmail");
     localStorage.removeItem("accessLevel");
-    localStorage.removeItem("team");
     localStorage.removeItem("name");
     localStorage.removeItem("photoUrl");
 
-    // Desloga do Google Identity Services 
     if (window.google && window.google.accounts.id) {
       window.google.accounts.id.disableAutoSelect();
     }
@@ -127,36 +134,19 @@ function DashboardAdmin() {
     return name ? name.charAt(0).toUpperCase() : '?';
   };
 
-
-  useEffect(() => {
-    fetchDashboards();
-    fetchTeams();
-  }, []);
-
-  // Efeito para aplicar filtros
-  useEffect(() => {
-    applyFilters();
-  }, [dashboards, searchTerm, selectedTeam, sortBy]);
-
   const applyFilters = () => {
     let filtered = [...dashboards];
 
-    // Filtro por termo de busca (título)
-    if (searchTerm) {
+    if (searchTerm && searchTerm.trim() !== '') {
       filtered = filtered.filter(dashboard =>
-        dashboard.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        dashboard.description.toLowerCase().includes(searchTerm.toLowerCase())
+        dashboard.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dashboard.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dashboard.emailsWithAccess?.some(email => 
+          email.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       );
     }
 
-    // Filtro por equipe
-    if (selectedTeam) {
-      filtered = filtered.filter(dashboard =>
-        dashboard.access && dashboard.access.includes(selectedTeam)
-      );
-    }
-
-    // Ordenação
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'title':
@@ -166,9 +156,9 @@ function DashboardAdmin() {
         case 'oldest':
           return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
         case 'mostAccess':
-          return (b.access?.length || 0) - (a.access?.length || 0);
+          return (b.emailsWithAccess?.length || 0) - (a.emailsWithAccess?.length || 0);
         case 'leastAccess':
-          return (a.access?.length || 0) - (b.access?.length || 0);
+          return (a.emailsWithAccess?.length || 0) - (b.emailsWithAccess?.length || 0);
         default:
           return 0;
       }
@@ -177,15 +167,15 @@ function DashboardAdmin() {
     setFilteredDashboards(filtered);
   };
 
-  const openRemoveAccessModal = (dashboardId, team, dashboardTitle) => {
+  const openRemoveAccessModal = (dashboardId, email, dashboardTitle) => {
     setModal({
       isOpen: true,
       type: 'delete',
       title: 'Remover Acesso',
-      message: `Tem certeza que deseja remover o acesso do time ${team} ao dashboard "${dashboardTitle}"?`,
+      message: `Tem certeza que deseja remover o acesso de ${email} ao dashboard "${dashboardTitle}"?`,
       dashboardId: dashboardId,
-      team: team,
-      onConfirm: () => handleRemoveAccess(dashboardId, team)
+      email: email,
+      onConfirm: () => handleRemoveAccess(dashboardId, email)
     });
   };
 
@@ -216,7 +206,7 @@ function DashboardAdmin() {
       title: '',
       message: '',
       dashboardId: null,
-      team: '',
+      email: '',
       onConfirm: null
     });
   };
@@ -237,39 +227,42 @@ function DashboardAdmin() {
     }
   };
 
-  const handleRemoveAccess = async (dashboardId, team) => {
+  const handleRemoveAccess = async (dashboardId, email) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/dashboard/access`, {
+      const response = await fetch(`${API_BASE_URL}/dashboard/access-email`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           dashboardID: dashboardId,
-          team: team
+          email: email
         })
       });
       
-      if (!response.ok) throw new Error('Falha ao remover acesso');
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Falha ao remover acesso');
+      }
       
       setDashboards(prevDashboards => 
         prevDashboards.map(dashboard => 
           dashboard.id === dashboardId
             ? {
                 ...dashboard,
-                access: dashboard.access.filter(t => t !== team)
+                emailsWithAccess: dashboard.emailsWithAccess.filter(e => e !== email)
               }
             : dashboard
         )
       );
       
       closeModal();
-      showSuccessModal(`Acesso do time ${team} removido com sucesso!`);
+      showSuccessModal(`Acesso de ${email} removido com sucesso!`);
       
     } catch (error) {
       console.error('Erro ao remover acesso:', error);
-      showErrorModal('Falha ao remover acesso');
+      showErrorModal(error.message || 'Falha ao remover acesso');
     }
   };
-
 
   const handleCreateDashboard = async () => {
     if (!newDashboard.title || !newDashboard.url) {
@@ -278,129 +271,89 @@ function DashboardAdmin() {
     }
 
     try {
-      await fetch(`${API_BASE_URL}/dashboard`, {
+      const response = await fetch(`${API_BASE_URL}/dashboard`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newDashboard)
       });
       
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Erro ao criar dashboard');
+      }
+      
       fetchDashboards();
       setNewDashboard({ title: '', description: '', url: '', thumbnail: '' });
+      setShowCreateModal(false);
       showSuccessModal('Dashboard criado com sucesso!');
     } catch (error) {
       console.error('Erro ao criar dashboard:', error);
-      showErrorModal('Erro ao criar dashboard');
-    }
-  };
-
-  const fetchDashboardAccess = async (dashboardId) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/dashboard/access?dashboardId=${dashboardId}`);
-        if (!response || !response.ok) {
-            throw new Error(`Erro ao buscar acessos: ${response?.status || "sem resposta"}`);
-        }
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            throw new Error(`Resposta não é JSON: ${text.substring(0, 100)}...`);
-        }
-        const data = await response.json();
-        return data.data || [];
-    } catch (error) {
-        console.error(`Erro ao buscar acessos para dashboard ${dashboardId}:`, error);
-        return [];
+      showErrorModal(error.message || 'Erro ao criar dashboard');
     }
   };
 
   const fetchDashboards = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/dashboard`);
-      if (!response.ok) throw new Error('Erro ao buscar dashboards');
-      const dashboards = await response.json();
       
-      const dashboardsWithAccess = await Promise.all(
-        dashboards.map(async dashboard => {
-          const accessList = await fetchDashboardAccess(dashboard.id);
-          return {
-            ...dashboard,
-            access: accessList.map(item => item.team)
-          };
-        })
-      );
-
-      setDashboards(dashboardsWithAccess);
-      
-      const initialAccessRules = {};
-      dashboardsWithAccess.forEach(dashboard => {
-        if (dashboard.access && dashboard.access.length > 0) {
-          initialAccessRules[dashboard.id] = dashboard.access[0];
-        }
-      });
-      setAccessRules(initialAccessRules);
-      
-    } catch (error) {
-      console.error('Falha ao carregar dashboards:', error);
-    }
-  };
-
-  const fetchTeams = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/teams`);
-      if (!response.ok) throw new Error('Erro ao buscar times');
-      const data = await response.json();
-      if (data.success) {
-        setTeams(data.data.map(team => team.name));
-      } else {
-        throw new Error(data.message || 'Erro ao carregar times');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const result = await response.json();
+      
+      if (result && result.success && Array.isArray(result.data)) {
+        setDashboards(result.data);
+      } else {
+        throw new Error('Formato de resposta inválido');
+      }
+      
     } catch (error) {
-      console.error('Falha ao carregar times:', error);
+      console.error('❌ Erro ao carregar dashboards:', error);
+      showErrorModal(`Falha ao carregar dashboards: ${error.message}`);
     }
   };
-
-  
 
   const handleSetAccess = async (dashboardId) => {
-    if (!accessRules[dashboardId]) {
-      showErrorModal('Selecione um time antes de definir o acesso');
+    if (!selectedEmail) {
+      showErrorModal('Selecione um usuário antes de conceder acesso');
       return;
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/dashboard/access`, {
+      const response = await fetch(`${API_BASE_URL}/dashboard/access-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           dashboardID: dashboardId,
-          team: accessRules[dashboardId],
-          accessLevel: 'view'
+          email: selectedEmail
         })
       });
       
-      if (!response.ok) throw new Error('Falha ao atualizar regras');
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Falha ao conceder acesso');
+      }
       
       setDashboards(prevDashboards => 
         prevDashboards.map(dashboard => 
           dashboard.id === dashboardId
             ? {
                 ...dashboard,
-                access: [...(dashboard.access || []), accessRules[dashboardId]]
+                emailsWithAccess: [...(dashboard.emailsWithAccess || []), selectedEmail]
               }
             : dashboard
         )
       );
       
-      // Limpa o select após adicionar
-      setAccessRules(prev => ({
-        ...prev,
-        [dashboardId]: ''
-      }));
-
-      showSuccessModal(`Acesso concedido ao time ${accessRules[dashboardId]}!`);
+      setSelectedEmail('');
+      showSuccessModal(`Acesso concedido para ${selectedEmail}!`);
       
     } catch (error) {
       console.error('Erro:', error);
-      showErrorModal('Falha ao atualizar regras de acesso');
+      showErrorModal(error.message || 'Falha ao conceder acesso');
     }
   };
 
@@ -419,13 +372,19 @@ function DashboardAdmin() {
           url: editingDashboard.url
         })
       });
-      if (!response.ok) throw new Error('Erro ao editar dashboard');
+      
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Erro ao editar dashboard');
+      }
+      
       setEditingDashboard(null);
       fetchDashboards();
       showSuccessModal('Dashboard atualizado com sucesso!');
     } catch (error) {
       console.error(error);
-      showErrorModal('Erro ao salvar edição');
+      showErrorModal(error.message || 'Erro ao salvar edição');
     }
   };
 
@@ -440,19 +399,14 @@ function DashboardAdmin() {
     });
   };
 
-  // Função para limpar filtros
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedTeam('');
     setSortBy('title');
   };
 
-
   return (
     <div className="app-layout">
-      {/* SIDEBAR COMPLETO COM DADOS DO USUÁRIO */}
       <aside className="app-sidebar">
-        {/* Seção do Perfil (Com foto, nome e time) */}
         <div className="user-profile">
           {userPhotoUrl && userPhotoUrl !== 'PLACEHOLDER_INITIAL' ? (
             <img src={userPhotoUrl} alt="Foto do Usuário" className="user-avatar" />
@@ -461,12 +415,11 @@ function DashboardAdmin() {
               {getUserInitial(userName)}
             </div>
           )}
-          <h3 className="profile-name">{userName || userEmail}</h3>
-          <p className="profile-team">Setor: {userTeam}</p>
+          <h3 className="profile-name">{userName}</h3>
+          <p className="profile-team">Nível: {accessLevel}</p>
           <hr className="profile-divider" />
         </div>
 
-        {/* Botões de Ação/Navegação */}
         <nav className="sidebar-nav">
           <button className="nav-btn" onClick={DashboardUser}>
             <i className="fas fa-chart-bar"></i> Meus Dashboards
@@ -477,26 +430,21 @@ function DashboardAdmin() {
               <button className="nav-btn active">
                 <i className="fas fa-cog"></i> Gerenciar Dashboards
               </button>
-              <button className="nav-btn" onClick={Teams}>
-                <i className="fas fa-users"></i> Gerenciar Setores
-              </button>
               <button className="nav-btn" onClick={goToConfig}>
                 <i className="fas fa-user-lock"></i> Gerenciar Usuários
               </button>
               <button className="nav-btn" onClick={goToAnalytics}>
-                  <i className="fas fa-analytics"></i> Analytics
+                <i className="fas fa-analytics"></i> Analytics
               </button>
             </>
           )}
         </nav>
         
-        {/* Botão Sair no rodapé da Sidebar */}
         <button className="logout-btn-sidebar" onClick={logout}>
           <i className="fas fa-sign-out-alt"></i> Sair
         </button>
       </aside>
 
-      {/* CONTEÚDO PRINCIPAL (TODO O SEU JSX EXISTENTE) */}
       <div className="main-content">
         <header className="main-header">
           <div className="header-left">
@@ -507,7 +455,6 @@ function DashboardAdmin() {
           </div>
 
           <div className="header-right">
-            {/* Informações corporativas */}
             <div className="header-info">
               <div className="info-item">
                 <i className="fas fa-building"></i>
@@ -517,15 +464,12 @@ function DashboardAdmin() {
                 <i className="fas fa-layer-group"></i>
                 <span>Business Intelligence</span>
               </div>
-              <div className="current-time" id="current-time">
-                {/* Será preenchido via JavaScript */}
-              </div>
+              <div className="current-time" id="current-time"></div>
             </div>
-            {/* Menu do Usuário */}
             <div className="user-menu">
               <div className="user-info-header">
                 <span className="user-name-header">{userName || userEmail}</span>
-                <span className="user-role-header">{accessLevel} • {userTeam}</span>
+                <span className="user-role-header">{accessLevel}</span>
               </div>
               {userPhotoUrl && userPhotoUrl !== 'PLACEHOLDER_INITIAL' ? (
                 <img src={userPhotoUrl} alt="User" className="user-avatar-header" />
@@ -550,20 +494,21 @@ function DashboardAdmin() {
             <div className="actions-grid">
               <button 
                 className="quick-action-btn primary-action"
-                onClick={() => document.querySelector('.create-dashboard-form').scrollIntoView({ behavior: 'smooth' })}
+                onClick={openCreateModal}
               >
                 <i className="fas fa-plus-circle"></i>
                 <span>Criar Novo Dashboard</span>
               </button>
               <button 
                 className="quick-action-btn secondary-action"
-                onClick={() => navigate('/teams')}
+                onClick={goToConfig}
               >
                 <i className="fas fa-users-cog"></i>
-                <span>Gerenciar Setores</span>
+                <span>Gerenciar Usuários</span>
               </button>
             </div>
           </section>
+
           {/* Seção de Filtros */}
           <section className="filters-section">
             <div className="filters-header">
@@ -574,7 +519,7 @@ function DashboardAdmin() {
               <button 
                 className="clear-filters-btn"
                 onClick={clearFilters}
-                disabled={!searchTerm && !selectedTeam && sortBy === 'title'}
+                disabled={!searchTerm && sortBy === 'title'}
               >
                 <i className="fas fa-times"></i>
                 Limpar Filtros
@@ -589,28 +534,11 @@ function DashboardAdmin() {
                 </label>
                 <input
                   type="text"
-                  placeholder="Buscar por título ou descrição..."
+                  placeholder="Buscar por título, descrição ou email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="filter-input"
                 />
-              </div>
-
-              <div className="filter-group">
-                <label>
-                  <i className="fas fa-users"></i>
-                  Filtrar por Equipe
-                </label>
-                <select
-                  value={selectedTeam}
-                  onChange={(e) => setSelectedTeam(e.target.value)}
-                  className="filter-select"
-                >
-                  <option value="">Todas as equipes</option>
-                  {teams.map(team => (
-                    <option key={team} value={team}>{team}</option>
-                  ))}
-                </select>
               </div>
 
               <div className="filter-group">
@@ -636,11 +564,10 @@ function DashboardAdmin() {
               <span className="stat-item">
                 <strong>{filteredDashboards.length}</strong> de <strong>{dashboards.length}</strong> dashboards
               </span>
-              {(searchTerm || selectedTeam) && (
+              {searchTerm && (
                 <span className="active-filters">
                   Filtros ativos: 
-                  {searchTerm && <span className="filter-tag">Busca: "{searchTerm}"</span>}
-                  {selectedTeam && <span className="filter-tag">Equipe: {selectedTeam}</span>}
+                  <span className="filter-tag">Busca: "{searchTerm}"</span>
                 </span>
               )}
             </div>
@@ -669,7 +596,7 @@ function DashboardAdmin() {
                 {dashboards.length === 0 && (
                   <button 
                     className="primary-btn"
-                    onClick={() => document.querySelector('.create-dashboard-form').scrollIntoView({ behavior: 'smooth' })}
+                    onClick={openCreateModal}
                   >
                     <i className="fas fa-plus"></i>
                     Criar Primeiro Dashboard
@@ -685,8 +612,8 @@ function DashboardAdmin() {
                         <h3 className="card-title">{dashboard.title}</h3>
                         <div className="dashboard-stats">
                           <span className="stat">
-                            <i className="fas fa-users"></i>
-                            {dashboard.access?.length || 0} times
+                            <i className="fas fa-envelope"></i>
+                            {dashboard.emailsWithAccess?.length || 0} emails
                           </span>
                         </div>
                       </div>
@@ -717,22 +644,21 @@ function DashboardAdmin() {
                     </div>
 
                     {/* Acessos Atuais */}
-                    {dashboard.access && dashboard.access.length > 0 && (
+                    {dashboard.emailsWithAccess && dashboard.emailsWithAccess.length > 0 && (
                       <div className="access-section">
                         <h4 className="access-title">
-                          <i className="fas fa-users"></i>
-                          Times com Acesso
+                          <i className="fas fa-envelope"></i>
+                          Emails com Acesso
                         </h4>
                         <div className="access-tags">
-                          {dashboard.access.map(team => (
-                            <span key={`${dashboard.id}-${team}`} className="access-tag">
-                              {team}
+                          {dashboard.emailsWithAccess.map(email => (
+                            <span key={`${dashboard.id}-${email}`} className="access-tag">
+                              {email}
                               <button 
                                 className="remove-tag"
-                                onClick={() => openRemoveAccessModal(dashboard.id, team, dashboard.title)}
+                                onClick={() => openRemoveAccessModal(dashboard.id, email, dashboard.title)}
                                 title="Remover acesso"
                               >
-                                <span>❌</span>
                                 <i className="fas fa-times"></i>
                               </button>
                             </span>
@@ -744,25 +670,24 @@ function DashboardAdmin() {
                     {/* Adicionar Novo Acesso */}
                     <div className="add-access-section">
                       <select
-                        value={accessRules[dashboard.id] || ''}
-                        onChange={(e) => setAccessRules({
-                          ...accessRules,
-                          [dashboard.id]: e.target.value
-                        })}
+                        value={selectedEmail}
+                        onChange={(e) => setSelectedEmail(e.target.value)}
                         className="access-select"
                       >
-                        <option value="">Selecione um time para adicionar...</option>
-                        {teams
-                          .filter(team => !dashboard.access?.includes(team))
-                          .map(team => (
-                            <option key={team} value={team}>{team}</option>
+                        <option value="">Selecione um usuário...</option>
+                        {users
+                          .filter(user => !dashboard.emailsWithAccess?.includes(user.email))
+                          .map(user => (
+                            <option key={user.id} value={user.email}>
+                              {user.name} ({user.email}) - {user.accessLevel}
+                            </option>
                           ))
                         }
                       </select>
                       <button 
                         onClick={() => handleSetAccess(dashboard.id)}
                         className="secondary-btn access-btn"
-                        disabled={!accessRules[dashboard.id]}
+                        disabled={!selectedEmail}
                       >
                         <i className="fas fa-plus"></i>
                         Adicionar Acesso
@@ -773,16 +698,23 @@ function DashboardAdmin() {
               </div>
             )}
           </section>
+        </main>
 
-          {/* Seção de Criação */}
-          <section className="admin-section create-section">
-            <div className="section-header">
-              <i className="fas fa-plus-circle section-icon"></i>
-              <h2>Criar Novo Dashboard</h2>
-            </div>
-            
-            <div className="create-dashboard-form">
-              <div className="form-row">
+        {/* Modal de Criação */}
+        {showCreateModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h2>Criar Novo Dashboard</h2>
+                <button 
+                  className="close-btn"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+              
+              <div className="modal-body">
                 <div className="form-group">
                   <label>Título do Dashboard *</label>
                   <input
@@ -802,30 +734,35 @@ function DashboardAdmin() {
                     className="form-input"
                   />
                 </div>
+                
+                <div className="form-group">
+                  <label>Descrição</label>
+                  <textarea
+                    placeholder="Descreva o propósito e conteúdo deste dashboard..."
+                    value={newDashboard.description}
+                    onChange={(e) => setNewDashboard({...newDashboard, description: e.target.value})}
+                    className="form-textarea"
+                    rows="3"
+                  />
+                </div>
               </div>
               
-              <div className="form-group">
-                <label>Descrição</label>
-                <textarea
-                  placeholder="Descreva o propósito e conteúdo deste dashboard..."
-                  value={newDashboard.description}
-                  onChange={(e) => setNewDashboard({...newDashboard, description: e.target.value})}
-                  className="form-textarea"
-                  rows="3"
-                />
+              <div className="modal-footer">
+                <button className="secondary-btn" onClick={() => setShowCreateModal(false)}>
+                  Cancelar
+                </button>
+                <button 
+                  className="primary-btn" 
+                  onClick={handleCreateDashboard}
+                  disabled={!newDashboard.title || !newDashboard.url}
+                >
+                  <i className="fas fa-plus"></i>
+                  Criar Dashboard
+                </button>
               </div>
-              
-              <button 
-                onClick={handleCreateDashboard}
-                className="primary-btn create-btn"
-                disabled={!newDashboard.title || !newDashboard.url}
-              >
-                <i className="fas fa-plus"></i>
-                Criar Dashboard
-              </button>
             </div>
-          </section>
-        </main>
+          </div>
+        )}
 
         {/* Modal de Edição */}
         {editingDashboard && (

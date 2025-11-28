@@ -1030,3 +1030,84 @@ button:disabled:hover {
   border-color: white;
   transform: scale(1.2);
 }
+
+
+
+/* === SELECT STYLES === */
+.access-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: white;
+  color: #2d3748;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234a5568' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 14px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.access-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  background-color: #f8f9fa;
+}
+
+.access-select:hover {
+  border-color: #cbd5e0;
+  background-color: #f7fafc;
+}
+
+.access-select:disabled {
+  background-color: #f8f9fa;
+  color: #a0aec0;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* === LAYOUT === */
+.add-access-section {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.add-access-section .access-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.add-access-section .access-btn {
+  white-space: nowrap;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-weight: 600;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 640px) {
+  .add-access-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .add-access-section .access-btn {
+    min-width: auto;
+    width: 100%;
+  }
+}
