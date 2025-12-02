@@ -3,7 +3,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/user_dashboard.css';
 // Altere o caminho da logo se for diferente
-import logo from '../assets/logo_personalizado.png'; 
+import logo from '../assets/logo_personalizado.png';
+import ChatWidget from "../components/AIAssistantChat/chat_widget";
+
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
@@ -106,14 +108,6 @@ const UserDashboard = () => {
     const DashboardAdmin = useCallback(() => {
         if (accessLevel === "Admin") {
             navigate('/dashboard-admin');
-        } else {
-            alert("Acesso negado!");
-        }
-    }, [accessLevel, navigate]);
-
-    const Teams = useCallback(() => {
-        if (accessLevel === "Admin") {
-            navigate('/teams');
         } else {
             alert("Acesso negado!");
         }
@@ -228,9 +222,6 @@ const UserDashboard = () => {
                         <button className="nav-btn" onClick={DashboardAdmin}>
                             <i className="fas fa-cog"></i> Gerenciar Dashboards
                         </button>
-                        <button className="nav-btn" onClick={Teams}>
-                            <i className="fas fa-users"></i> Gerenciar Setores
-                        </button>
                         <button className="nav-btn" onClick={goToConfig}>
                             <i className="fas fa-user-lock"></i> Gerenciar Usuários
                         </button>
@@ -245,6 +236,10 @@ const UserDashboard = () => {
                 <button className="logout-btn-sidebar" onClick={logout}>
                     <i className="fas fa-sign-out-alt"></i> Sair
                 </button>
+                <div class="sidebar-footer">
+                    <p class="footer-title">Sebratel Tecnologia — Todos os direitos reservados</p>
+                    <p class="footer-subtitle">Desenvolvido pela Equipe de P&D</p>
+                </div>
             </aside>
 
             {/* 2. Conteúdo Principal */}
@@ -320,7 +315,7 @@ const UserDashboard = () => {
                                 key={dash.id} 
                                 className="dashboard-card" 
                                 onClick={() => openFullscreen(dash.url, dash.id, dash.title)}
-                                style={{ animationDelay: `${index * 0.1}s` }}
+                                satyle={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <div className="card-preview">
                                     <DashboardVisual />
@@ -350,14 +345,18 @@ const UserDashboard = () => {
                     ) : (
                         <div className="no-dashboards-message">
                             <i className="fas fa-info-circle"></i> 
-                            <p>Nenhum dashboard disponível para o time {userTeam}.</p>
+                            <p>Nenhum dashboard disponível para o usuário: {userEmail}.</p>
                             {accessLevel === "Admin" && (
                                 <button onClick={DashboardAdmin} className="add-dashboard-btn">
                                     Adicionar novo dashboard
                                 </button>
                             )}
                         </div>
+
+                        
                     )}
+                    <ChatWidget />
+
                 </main>
             </div>
         </div>

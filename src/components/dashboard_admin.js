@@ -443,6 +443,13 @@ function DashboardAdmin() {
         <button className="logout-btn-sidebar" onClick={logout}>
           <i className="fas fa-sign-out-alt"></i> Sair
         </button>
+        
+        <div class="sidebar-footer">
+            <p class="footer-title">Sebratel Tecnologia — Todos os direitos reservados</p>
+            <p class="footer-subtitle">Desenvolvido pela Equipe de P&D</p>
+        </div>
+
+
       </aside>
 
       <div className="main-content">
@@ -676,7 +683,23 @@ function DashboardAdmin() {
                       >
                         <option value="">Selecione um usuário...</option>
                         {users
+                          // 1. Filtragem (mantida)
                           .filter(user => !dashboard.emailsWithAccess?.includes(user.email))
+                          // 2. Ordenação (NOVA ETAPA)
+                          .sort((a, b) => {
+                            // Converte para letras minúsculas para garantir uma ordenação case-insensitive (ignorando maiúsculas/minúsculas)
+                            const nameA = a.name.toLowerCase();
+                            const nameB = b.name.toLowerCase();
+
+                            if (nameA < nameB) {
+                              return -1; // 'a' vem antes de 'b'
+                            }
+                            if (nameA > nameB) {
+                              return 1; // 'a' vem depois de 'b'
+                            }
+                            return 0; // Nomes são iguais
+                          })
+                          // 3. Mapeamento (mantido)
                           .map(user => (
                             <option key={user.id} value={user.email}>
                               {user.name} ({user.email}) - {user.accessLevel}

@@ -128,7 +128,7 @@ const LoginGoogleSSO = () => {
               </div>
               <div className="feature-item">
                 <i className="fas fa-users feature-icon"></i>
-                <span>Gerenciamento por Times</span>
+                <span>Gerenciamento por Usuários</span>
               </div>
             </div>
           </div>

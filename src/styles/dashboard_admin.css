@@ -1111,3 +1111,23 @@ button:disabled:hover {
     width: 100%;
   }
 }
+
+.sidebar-footer {
+    margin-top: 20px;
+    padding: 12px;
+    border-top: 1px solid #e0e0e0;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+}
+
+.sidebar-footer .footer-title {
+    margin: 0;
+    font-weight: 600;
+}
+
+.sidebar-footer .footer-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 11px;
+    color: #888;
+}

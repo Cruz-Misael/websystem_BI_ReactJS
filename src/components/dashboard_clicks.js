@@ -23,12 +23,53 @@ const DashboardClicks = () => {
     const [userTeam, setUserTeam] = useState('');
     const [userName, setUserName] = useState('');
     const [userPhotoUrl, setUserPhotoUrl] = useState('');
-    
+    const [inactiveUsers, setInactiveUsers] = useState([]);
+    const [loadingInactive, setLoadingInactive] = useState(false);
     const navigate = useNavigate();
 
     // =========================================================
     // 1. FUNÇÕES DE BUSCA E LÓGICA
     // =========================================================
+
+    const fetchInactiveUsers = async () => {
+        try {
+            setLoadingInactive(true);
+            const response = await fetch(`${API_BASE_URL}/users/inativos`);
+            const result = await response.json();
+
+            if (result.success) {
+                setInactiveUsers(result.data);
+            }
+        } catch (err) {
+            console.error("Erro ao carregar usuários inativos", err);
+        } finally {
+            setLoadingInactive(false);
+        }
+    };
+
+    const deleteUser = async (id) => {
+        if (!window.confirm("Tem certeza que deseja remover este usuário?")) return;
+
+        try {
+            await fetch(`${API_BASE_URL}/users/${id}`, {
+                method: "DELETE"
+            });
+
+            setInactiveUsers(prev => prev.filter(u => u.id !== id));
+        } catch (err) {
+            console.error("Erro ao deletar usuário:", err);
+        }
+    };
+
+    const deleteAllInactive = async () => {
+        if (!window.confirm("Tem certeza que deseja REMOVER TODOS os usuários inativos?")) return;
+
+        for (const user of inactiveUsers) {
+            await fetch(`${API_BASE_URL}/users/${user.id}`, { method: "DELETE" });
+        }
+
+        setInactiveUsers([]);
+    };
 
     const fetchClickData = useCallback(async () => {
         if (accessLevel !== "Admin") {
@@ -269,6 +310,9 @@ const DashboardClicks = () => {
             'linear-gradient(135deg, #9B5DE5, #7D46C7)'
         ];
 
+
+
+
         return (
             <div className="chart-container grouped-chart">
                 <h4>{title}</h4>
@@ -429,6 +473,142 @@ const DashboardClicks = () => {
             });
     };
 
+    const renderInactiveUsers = () => (
+    <div className="inactive-users-section">
+        <h2>Usuários sem acesso há mais de dois meses:</h2>
+
+        <button
+        className="inactive-refresh-btn"
+        onClick={fetchInactiveUsers}
+        >
+        Atualizar lista
+        </button>
+
+        {inactiveUsers.length > 0 && (
+        <button
+            className="inactive-delete-all-btn"
+            onClick={deleteAllInactive}
+        >
+            Excluir Todos
+        </button>
+        )}
+
+        {loadingInactive && <p>Carregando usuários inativos...</p>}
+
+        {!loadingInactive && inactiveUsers.length === 0 && (
+        <p className="inactive-empty">Nenhum usuário inativo encontrado.</p>
+        )}
+
+        {!loadingInactive && inactiveUsers.length > 0 && (
+        <div className="inactive-table-wrapper">
+            <table className="inactive-table">
+            <thead>
+                <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th className="text-center">Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {inactiveUsers.map((u) => (
+                <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td className="text-center">
+                    <button
+                        className="inactive-delete-btn"
+                        onClick={() => deleteUser(u.id)}
+                    >
+                        Excluir
+                    </button>
+                    </td>
+                </tr>
+                ))}
+            </tbody>
+            </table>
+        </div>
+        )}
+    </div>
+    );
+
+    const getDistinctDashboardsByMonth = () => {
+    const monthDashMap = {};
+
+    clickData.forEach(click => {
+        const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
+        const monthKey = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
+        const dashboard = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
+
+        if (!monthDashMap[monthKey]) monthDashMap[monthKey] = new Set();
+        monthDashMap[monthKey].add(dashboard);
+    });
+
+    // Converte para array de [mês, quantidade distinta]
+    return Object.entries(monthDashMap)
+        .map(([month, dashboardsSet]) => [month, dashboardsSet.size])
+        .sort(([a], [b]) => {
+        const [mA, yA] = a.split('/');
+        const [mB, yB] = b.split('/');
+        return new Date(`${yA}-${mA}-01`) - new Date(`${yB}-${mB}-01`);
+        });
+    };
+
+    const DashboardsByMonthChart = ({ data, title }) => {
+    if (!data || data.length === 0) {
+        return (
+        <div className="chart-container">
+            <h4>{title}</h4>
+            <div className="no-data">Sem dados para exibir</div>
+        </div>
+        );
+    }
+
+    return (
+        <div className="chart-container">
+        <h4>{title}</h4>
+        <div className="dashboards-by-month">
+            {data.map(([month, dashboards]) => (
+            <div key={month} className="month-group">
+                <div className="month-label">{month}</div>
+                <div className="dashboards-list">
+                {dashboards.map(d => (
+                    <span key={d} className="dashboard-tag">{d}</span>
+                ))}
+                </div>
+            </div>
+            ))}
+        </div>
+        </div>
+    );
+    };
+
+    const getDashboardsByLastTwoMonths = () => {
+        const monthDashMap = {};
+
+        clickData.forEach(click => {
+            const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
+            const monthKey = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
+            const dashboard = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
+
+            if (!monthDashMap[monthKey]) monthDashMap[monthKey] = new Set();
+            monthDashMap[monthKey].add(dashboard);
+        });
+
+        // Ordena os meses
+        const sortedMonths = Object.entries(monthDashMap)
+            .sort(([a], [b]) => {
+            const [mA, yA] = a.split('/');
+            const [mB, yB] = b.split('/');
+            return new Date(`${yA}-${mA}-01`) - new Date(`${yB}-${mB}-01`);
+            });
+
+        // Pega apenas os dois últimos meses
+        const lastTwoMonths = sortedMonths.slice(-2);
+
+        return lastTwoMonths.map(([month, dashboardsSet]) => [month, Array.from(dashboardsSet)]);
+    };
+
+
 
     // =========================================================
     // 4. RENDERIZAÇÃO
@@ -471,6 +651,10 @@ const DashboardClicks = () => {
                 <button className="logout-btn-sidebar" onClick={logout}>
                     <i className="fas fa-sign-out-alt"></i> Sair
                 </button>
+                <div class="sidebar-footer">
+                    <p class="footer-title">Sebratel Tecnologia — Todos os direitos reservados</p>
+                    <p class="footer-subtitle">Desenvolvido pela Equipe de P&D</p>
+                </div>
             </aside>
 
             {/* Conteúdo Principal */}
@@ -573,10 +757,21 @@ const DashboardClicks = () => {
                                     data={getClicksByMonth()} 
                                     title="Cliques por Mês"
                                 />
-                                <GroupedBarChart 
-                                    title="Cliques por Mês e Dashboard"
+                                <DashboardsByMonthChart
+                                    data={getDashboardsByLastTwoMonths()}
+                                    title="Dashboards Visualizados (Últimos 2 meses)"
                                 />
+                                <SimpleBarChart 
+                                    data={getDistinctDashboardsByMonth()} 
+                                    title="Dashboards Distintas Acessados por Mês" 
+                                />
+
                             </div>
+
+                            {/* =========================================================
+                                    AQUI ENTRA A NOVA SEÇÃO: USUÁRIOS INATIVOS
+                                ========================================================= */}
+                            {renderInactiveUsers && renderInactiveUsers()}
 
                             {/* Botão de atualizar */}
                             <div className="analytics-actions">

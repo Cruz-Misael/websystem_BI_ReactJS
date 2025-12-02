@@ -326,6 +326,10 @@ const UserSettings = () => {
         <button className="logout-btn-sidebar" onClick={logout}>
           <i className="fas fa-sign-out-alt"></i> Sair
         </button>
+        <div class="sidebar-footer">
+            <p class="footer-title">Sebratel Tecnologia — Todos os direitos reservados</p>
+            <p class="footer-subtitle">Desenvolvido pela Equipe de P&D</p>
+        </div>
       </aside>
 
       {/* CONTEÚDO PRINCIPAL */}
