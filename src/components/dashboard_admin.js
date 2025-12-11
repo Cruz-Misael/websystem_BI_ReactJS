@@ -667,6 +667,7 @@ function DashboardAdmin() {
                                 title="Remover acesso"
                               >
                                 <i className="fas fa-times"></i>
+                                <span>X</span>
                               </button>
                             </span>
                           ))}

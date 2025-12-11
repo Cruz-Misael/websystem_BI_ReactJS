@@ -248,7 +248,7 @@ const UserDashboard = () => {
                     <div className="header-left">
                       <img src={logo} alt="Logo Sebratel" className="header-logo" />
                       <h1 className="header-title-text">
-                        Dashboards Sebratel - {userTeam}
+                        Dashboards Sebratel
                       </h1>
                     </div>
 
@@ -352,11 +352,8 @@ const UserDashboard = () => {
                                 </button>
                             )}
                         </div>
-
-                        
                     )}
                     <ChatWidget />
-
                 </main>
             </div>
         </div>

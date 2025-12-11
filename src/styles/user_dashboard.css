@@ -41,8 +41,7 @@
 
 /* ===== SIDEBAR MODERNA ===== */
 .app-sidebar {
-  background: linear-gradient(135deg, #291e00 0%, #291e00 100%);
-
+  background: linear-gradient(135deg, #353533 0%, #5a1c04 100%);
   padding: var(--space-lg);
   display: flex;
   flex-direction: column;
