@@ -7,7 +7,8 @@ import logo from '../assets/logo_personalizado.png';
 import ChatWidget from "../components/AIAssistantChat/chat_widget";
 
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_AUTH;
+const API_BASE_URL_CLICKS = process.env.REACT_APP_API_URL_CLICKS;
 
 // Componente único com visual de barras para todos os dashboards
 const DashboardVisual = () => {
@@ -115,15 +116,14 @@ const UserDashboard = () => {
 
     const trackDashboardClick = async (dashboardId, dashboardTitle) => {
         try {
-            await fetch(`${API_BASE_URL}/dashboard/click`, {
+            await fetch(`${API_BASE_URL_CLICKS}/dashboard/click`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    dashboardID: dashboardId, // Mudei para dashboardID (conforme seu backend)
+                    dashboardID: dashboardId,
                     userEmail: userEmail,
-                    // Removi userName e userTeam se não forem obrigatórios no backend
                     dashboardTitle: dashboardTitle
                 })
             });

@@ -5,7 +5,7 @@ import axios from 'axios';
 import '../styles/user_settings.css';
 import logo from '../assets/logo_personalizado.png';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_AUTH;
 
 const UserSettings = () => {
   // =========================================================

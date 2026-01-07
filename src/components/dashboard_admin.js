@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/dashboard_admin.css';
 import logo from '../assets/logo_personalizado.png';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_AUTH;
 
 function DashboardAdmin() {
   const [dashboards, setDashboards] = useState([]);
@@ -213,7 +213,7 @@ function DashboardAdmin() {
 
   const handleDeleteDashboard = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/dashboards/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/dashboard/${id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Erro ao deletar');
@@ -363,7 +363,7 @@ function DashboardAdmin() {
 
   const handleSaveDashboardEdit = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/dashboards/${editingDashboard.id}`, {
+      const response = await fetch(`${API_BASE_URL}/dashboard/${editingDashboard.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

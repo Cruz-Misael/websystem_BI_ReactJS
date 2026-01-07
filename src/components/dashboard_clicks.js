@@ -5,7 +5,7 @@ import '../styles/dashboard_clicks.css';
 import logo from '../assets/logo_personalizado.png';
 
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL_CLICKS;
 
 const DashboardClicks = () => {
     const [clickData, setClickData] = useState([]);
@@ -31,6 +31,7 @@ const DashboardClicks = () => {
     // 1. FUNÇÕES DE BUSCA E LÓGICA
     // =========================================================
 
+    
     const fetchInactiveUsers = async () => {
         try {
             setLoadingInactive(true);
@@ -144,7 +145,7 @@ const DashboardClicks = () => {
         // Dashboard mais popular
         const dashboardCounts = {};
         data.forEach(click => {
-            const dashName = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
+            const dashName = click.dashboardTitle;
             dashboardCounts[dashName] = (dashboardCounts[dashName] || 0) + 1;
         });
         
@@ -152,49 +153,60 @@ const DashboardClicks = () => {
             .sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A';
 
         // Cliques hoje
-        const today = new Date().toDateString();
-        const clicksToday = data.filter(click => {
-            const clickDate = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
-            return clickDate.toDateString() === today;
-        }).length;
+
 
         setStats({
             totalClicks,
             uniqueUsers,
             topDashboard,
-            clicksToday
+
         });
     };
 
     const getClicksByDay = () => {
         const daysMap = {};
-        
+
         clickData.forEach(click => {
-            const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
-            const dayKey = date.toLocaleDateString('pt-BR');
-            
-            if (!daysMap[dayKey]) {
-                daysMap[dayKey] = 0;
-            }
-            daysMap[dayKey]++;
+            if (!click.timestamp) return;
+
+            const date = new Date(
+                typeof click.timestamp === "string"
+                    ? click.timestamp.replace(" ", "T")
+                    : click.timestamp
+            );
+
+            if (isNaN(date)) return;
+
+            const dayKey = date.toLocaleDateString("pt-BR");
+
+            daysMap[dayKey] = (daysMap[dayKey] || 0) + 1;
         });
 
         return Object.entries(daysMap)
-            .sort(([a], [b]) => new Date(a) - new Date(b))
-            .slice(-10); // Últimos 10 dias
+            .sort(([a], [b]) => {
+                const da = new Date(a.split("/").reverse().join("-"));
+                const db = new Date(b.split("/").reverse().join("-"));
+                return da - db;
+            })
+            .slice(-10);
     };
+
 
     const getTopDashboards = () => {
         const dashMap = {};
-        
+
         clickData.forEach(click => {
-            const dashName = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
+            const dashboardTitle = click.dashboardTitle ?? click.dashboardTitle;
+
+            if (!dashboardTitle) return;
+
+            const dashName = `Dashboard ${dashboardTitle}`;
             dashMap[dashName] = (dashMap[dashName] || 0) + 1;
         });
 
         return Object.entries(dashMap)
-            .sort(([,a], [,b]) => b - a)
-            .slice(0, 5); // Top 5
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 5);
     };
 
     const logout = () => {
@@ -231,136 +243,6 @@ const DashboardClicks = () => {
         return name ? name.charAt(0).toUpperCase() : '?';
     };
 
-    const getDashboardClicksByMonth = () => {
-        const monthlyData = {};
-        const allDashboards = new Set();
-        const allMonths = new Set();
-
-        // Processa todos os cliques
-        clickData.forEach(click => {
-            const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
-            const monthKey = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
-            const dashboardName = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
-
-            allDashboards.add(dashboardName);
-            allMonths.add(monthKey);
-
-            if (!monthlyData[monthKey]) {
-                monthlyData[monthKey] = {};
-            }
-
-            if (!monthlyData[monthKey][dashboardName]) {
-                monthlyData[monthKey][dashboardName] = 0;
-            }
-
-            monthlyData[monthKey][dashboardName]++;
-        });
-
-        // Ordena os meses
-        const sortedMonths = Array.from(allMonths).sort((a, b) => {
-            const [mA, yA] = a.split('/');
-            const [mB, yB] = b.split('/');
-            const dateA = new Date(`${yA}-${mA}-01`);
-            const dateB = new Date(`${yB}-${mB}-01`);
-            return dateA - dateB;
-        });
-
-        // Ordena os dashboards por nome
-        const sortedDashboards = Array.from(allDashboards).sort();
-
-        return {
-            months: sortedMonths,
-            dashboards: sortedDashboards,
-            data: monthlyData
-        };
-    };
-
-    const GroupedBarChart = ({ title }) => {
-        const { months, dashboards, data } = getDashboardClicksByMonth();
-
-        if (months.length === 0 || dashboards.length === 0) {
-            return (
-                <div className="chart-container">
-                    <h4>{title}</h4>
-                    <div className="no-data">Sem dados para exibir</div>
-                </div>
-            );
-        }
-
-        // Encontra o valor máximo para escalar as barras
-        let maxValue = 0;
-        months.forEach(month => {
-            dashboards.forEach(dashboard => {
-                const value = data[month]?.[dashboard] || 0;
-                maxValue = Math.max(maxValue, value);
-            });
-        });
-
-        // Cores para as barras (pode personalizar)
-        const colors = [
-            'linear-gradient(135deg, #FF6B6B, #EE5A52)',
-            'linear-gradient(135deg, #4ECDC4, #45B7AF)',
-            'linear-gradient(135deg, #FFD166, #FFC857)',
-            'linear-gradient(135deg, #06D6A0, #05C191)',
-            'linear-gradient(135deg, #118AB2, #0F7A9D)',
-            'linear-gradient(135deg, #073B4C, #052E3A)',
-            'linear-gradient(135deg, #7209B7, #5A0792)',
-            'linear-gradient(135deg, #F15BB5, #D14A9E)',
-            'linear-gradient(135deg, #00BBF9, #00A5E0)',
-            'linear-gradient(135deg, #9B5DE5, #7D46C7)'
-        ];
-
-
-
-
-        return (
-            <div className="chart-container grouped-chart">
-                <h4>{title}</h4>
-                <div className="chart-legend">
-                    {dashboards.map((dashboard, index) => (
-                        <div key={dashboard} className="legend-item">
-                            <div 
-                                className="legend-color" 
-                                style={{ background: colors[index % colors.length] }}
-                            ></div>
-                            <span className="legend-label">{dashboard}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="grouped-bars-container">
-                    <div className="bars-scroll">
-                        {months.map(month => (
-                            <div key={month} className="month-group">
-                                <div className="month-label">{month}</div>
-                                <div className="bars-group">
-                                    {dashboards.map((dashboard, index) => {
-                                        const value = data[month]?.[dashboard] || 0;
-                                        const percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
-                                        
-                                        return (
-                                            <div key={dashboard} className="bar-container">
-                                                <div className="bar-wrapper">
-                                                    <div 
-                                                        className="grouped-bar"
-                                                        style={{ 
-                                                            height: `${percentage}%`,
-                                                            background: colors[index % colors.length]
-                                                        }}
-                                                        title={`${dashboard}: ${value} cliques`}
-                                                    ></div>
-                                                </div>
-                                                <div className="bar-value-small">{value}</div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    };
 
     // =========================================================
     // 2. USE EFFECT
@@ -444,114 +326,76 @@ const DashboardClicks = () => {
         );
     };
 
+    const parseMySQLDate = (value) => {
+        if (!value) return null;
+
+        // "2025-12-19 13:55:37.000" → "2025-12-19T13:55:37"
+        const iso = value.replace(' ', 'T').split('.')[0];
+
+        const date = new Date(iso);
+        return isNaN(date) ? null : date;
+    };
+
+
     const getClicksByMonth = () => {
         const monthsMap = {};
 
         clickData.forEach(click => {
-            const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
+            const date = parseMySQLDate(click.timestamp);
+            if (!date) return;
 
-            // Formato: "Jan/2025"
-            const monthKey = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' })
-                .replace('.', ''); // remove ponto do "jan."
+            // Chave interna segura para ordenação
+            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
-            if (!monthsMap[monthKey]) {
-                monthsMap[monthKey] = 0;
-            }
-
-            monthsMap[monthKey]++;
+            monthsMap[key] = (monthsMap[key] || 0) + 1;
         });
 
         return Object.entries(monthsMap)
-            .sort(([a], [b]) => {
-                const [mA, yA] = a.split('/');
-                const [mB, yB] = b.split('/');
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([key, count]) => {
+                const [year, month] = key.split("-");
+                const label = new Date(`${key}-01`).toLocaleDateString("pt-BR", {
+                    month: "short",
+                    year: "numeric"
+                }).replace(".", "");
 
-                const dateA = new Date(`${yA}-${mA}-01`);
-                const dateB = new Date(`${yB}-${mB}-01`);
-
-                return dateA - dateB;
+                return [label, count];
             });
     };
 
-    const renderInactiveUsers = () => (
-    <div className="inactive-users-section">
-        <h2>Usuários sem acesso há mais de dois meses:</h2>
-
-        <button
-        className="inactive-refresh-btn"
-        onClick={fetchInactiveUsers}
-        >
-        Atualizar lista
-        </button>
-
-        {inactiveUsers.length > 0 && (
-        <button
-            className="inactive-delete-all-btn"
-            onClick={deleteAllInactive}
-        >
-            Excluir Todos
-        </button>
-        )}
-
-        {loadingInactive && <p>Carregando usuários inativos...</p>}
-
-        {!loadingInactive && inactiveUsers.length === 0 && (
-        <p className="inactive-empty">Nenhum usuário inativo encontrado.</p>
-        )}
-
-        {!loadingInactive && inactiveUsers.length > 0 && (
-        <div className="inactive-table-wrapper">
-            <table className="inactive-table">
-            <thead>
-                <tr>
-                <th>Nome</th>
-                <th>Email</th>
-                <th className="text-center">Ação</th>
-                </tr>
-            </thead>
-            <tbody>
-                {inactiveUsers.map((u) => (
-                <tr key={u.id}>
-                    <td>{u.name}</td>
-                    <td>{u.email}</td>
-                    <td className="text-center">
-                    <button
-                        className="inactive-delete-btn"
-                        onClick={() => deleteUser(u.id)}
-                    >
-                        Excluir
-                    </button>
-                    </td>
-                </tr>
-                ))}
-            </tbody>
-            </table>
-        </div>
-        )}
-    </div>
-    );
-
     const getDistinctDashboardsByMonth = () => {
-    const monthDashMap = {};
+        const monthDashMap = {};
 
-    clickData.forEach(click => {
-        const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
-        const monthKey = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
-        const dashboard = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
+        clickData.forEach(click => {
+            const date = parseMySQLDate(click.timestamp);
+            if (!date) return;
 
-        if (!monthDashMap[monthKey]) monthDashMap[monthKey] = new Set();
-        monthDashMap[monthKey].add(dashboard);
-    });
+            // chave interna segura (YYYY-MM)
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
-    // Converte para array de [mês, quantidade distinta]
-    return Object.entries(monthDashMap)
-        .map(([month, dashboardsSet]) => [month, dashboardsSet.size])
-        .sort(([a], [b]) => {
-        const [mA, yA] = a.split('/');
-        const [mB, yB] = b.split('/');
-        return new Date(`${yA}-${mA}-01`) - new Date(`${yB}-${mB}-01`);
+            const dashboardId = click.dashboardTitle ?? click.dashboardTitle;
+            if (!dashboardId) return;
+
+            const dashboardName = `Dashboard ${dashboardId}`;
+
+            monthDashMap[monthKey] ??= new Set();
+            monthDashMap[monthKey].add(dashboardName);
         });
+
+        return Object.entries(monthDashMap)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([monthKey, dashboardsSet]) => {
+                const label = new Date(`${monthKey}-01`)
+                    .toLocaleDateString("pt-BR", {
+                        month: "short",
+                        year: "numeric"
+                    })
+                    .replace(".", "");
+
+                return [label, dashboardsSet.size];
+            });
     };
+
 
     const DashboardsByMonthChart = ({ data, title }) => {
     if (!data || data.length === 0) {
@@ -586,27 +430,39 @@ const DashboardClicks = () => {
         const monthDashMap = {};
 
         clickData.forEach(click => {
-            const date = click.timestamp?.toDate?.() || new Date(click.timestamp?._seconds * 1000);
-            const monthKey = date.toLocaleString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
-            const dashboard = click.dashboardTitle || `Dashboard ${click.dashboardId}`;
+            const date = parseMySQLDate(click.timestamp);
+            if (!date) return;
 
-            if (!monthDashMap[monthKey]) monthDashMap[monthKey] = new Set();
-            monthDashMap[monthKey].add(dashboard);
+            // Chave interna segura (ordenação)
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+            const dashboardTitle = click.dashboardTitle ?? click.dashboardTitle;
+            if (!dashboardTitle) return;
+
+            const dashboardName = `Dashboard ${dashboardTitle}`;
+
+            monthDashMap[monthKey] ??= new Set();
+            monthDashMap[monthKey].add(dashboardName);
         });
 
-        // Ordena os meses
+        // Ordena corretamente por data
         const sortedMonths = Object.entries(monthDashMap)
-            .sort(([a], [b]) => {
-            const [mA, yA] = a.split('/');
-            const [mB, yB] = b.split('/');
-            return new Date(`${yA}-${mA}-01`) - new Date(`${yB}-${mB}-01`);
-            });
+            .sort(([a], [b]) => a.localeCompare(b))
+            .slice(-2); // últimos 2 meses
 
-        // Pega apenas os dois últimos meses
-        const lastTwoMonths = sortedMonths.slice(-2);
+        // Converte chave técnica → label pt-BR
+        return sortedMonths.map(([monthKey, dashboardsSet]) => {
+            const label = new Date(`${monthKey}-01`)
+                .toLocaleDateString("pt-BR", {
+                    month: "short",
+                    year: "numeric"
+                })
+                .replace(".", "");
 
-        return lastTwoMonths.map(([month, dashboardsSet]) => [month, Array.from(dashboardsSet)]);
+            return [label, Array.from(dashboardsSet)];
+        });
     };
+
 
 
 
@@ -729,18 +585,6 @@ const DashboardClicks = () => {
                                     icon="fas fa-users"
                                     color="linear-gradient(135deg, var(--sebratel-yellow), var(--sebratel-yellow-dark))"
                                 />
-                                <StatCard 
-                                    title="Cliques Hoje" 
-                                    value={stats.clicksToday} 
-                                    icon="fas fa-calendar-day"
-                                    color="linear-gradient(135deg, #10B981, #059669)"
-                                />
-                                <StatCard 
-                                    title="Dashboard Mais Popular" 
-                                    value={stats.topDashboard} 
-                                    icon="fas fa-trophy"
-                                    color="linear-gradient(135deg, #8B5CF6, #7C3AED)"
-                                />
                             </div>
 
                             {/* Gráficos */}
@@ -767,12 +611,6 @@ const DashboardClicks = () => {
                                 />
 
                             </div>
-
-                            {/* =========================================================
-                                    AQUI ENTRA A NOVA SEÇÃO: USUÁRIOS INATIVOS
-                                ========================================================= */}
-                            {renderInactiveUsers && renderInactiveUsers()}
-
                             {/* Botão de atualizar */}
                             <div className="analytics-actions">
                                 <button onClick={fetchClickData} className="refresh-btn">

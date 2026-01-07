@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_LOGIN = process.env.REACT_APP_LOGIN;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
 
 const LoginGoogleSSO = () => {
@@ -28,7 +28,7 @@ const LoginGoogleSSO = () => {
       const firebaseIdToken = await auth.currentUser.getIdToken();
 
       // 3) Enviar token ao backend
-      const authResponse = await fetch(`${API_BASE_URL}/auth/sso-firebase`, {
+      const authResponse = await fetch(`${API_BASE_LOGIN}/auth/sso-firebase`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firebaseIdToken })
