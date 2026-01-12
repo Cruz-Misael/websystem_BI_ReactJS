@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "./chat_widget.css";
 import isa_avatar from '../../assets/isa_perfil.png';
-
-const API_BASE_URL = process.env.REACT_APP_AUTH;
+import { ref, onChildAdded, remove } from "firebase/database";
+import { db } from "../../firebase";
+const API_BASE_URL = process.env.REACT_APP_FIREBASE;
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([
     { sender: "bot", text: 
       "Olá! Sou a Isa, assistente virtual da Sebratel. Estou aqui para ajudar você na abertura de chamados para as equipes de TI/Infra, TI/Dados, TI/HelpDesk ou TI/Dev. Lembre-se de que ainda estou em fase beta, portanto posso apresentar algumas falhas. Mesmo assim, farei o possível para oferecer o melhor suporte."
@@ -17,23 +17,30 @@ export default function ChatWidget() {
 
 
   /* ========================================================
-     1 — CONECTA SSE AO MONTAR O CHAT
-     ======================================================== */
+    1 — LISTENER REALTIME DATABASE
+  ======================================================== */
     useEffect(() => {
       const email = localStorage.getItem("userEmail");
       if (!email) return;
 
-      const eventSource = new EventSource(`${API_BASE_URL}/chat/stream/${email}`);
+      const safeEmail = email.replace(/\./g, "_");
+      const inboxRef = ref(db, `chat/inbox/${safeEmail}`);
 
-      eventSource.addEventListener("message", (e) => {
-        const data = JSON.parse(e.data);
-        setMessages((prev) => [...prev, { sender: "bot", text: data.message }]);
+      const unsubscribe = onChildAdded(inboxRef, (snapshot) => {
+        const data = snapshot.val();
+
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: data.text }
+        ]);
+
         setTyping(false);
+
+        // remove mensagem após leitura
+        remove(snapshot.ref);
       });
 
-      eventSource.addEventListener("ping", () => {});
-
-      return () => eventSource.close();
+      return () => unsubscribe();
     }, []);
 
 

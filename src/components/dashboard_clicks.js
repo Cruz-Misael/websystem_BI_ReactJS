@@ -5,7 +5,7 @@ import '../styles/dashboard_clicks.css';
 import logo from '../assets/logo_personalizado.png';
 
 
-const API_BASE_URL = process.env.REACT_APP_API_URL_CLICKS;
+const API_BASE_URL = process.env.REACT_APP_MARIADB;
 
 const DashboardClicks = () => {
     const [clickData, setClickData] = useState([]);

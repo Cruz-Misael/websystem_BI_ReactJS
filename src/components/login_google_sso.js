@@ -9,7 +9,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase";
 
-const API_BASE_LOGIN = process.env.REACT_APP_LOGIN;
+const API_BASE_LOGIN = process.env.REACT_APP_FIREBASE;
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_CLIENT_ID;
 
 const LoginGoogleSSO = () => {

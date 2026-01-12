@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/dashboard_admin.css';
 import logo from '../assets/logo_personalizado.png';
 
-const API_BASE_URL = process.env.REACT_APP_AUTH;
+const API_BASE_URL = process.env.REACT_APP_FIREBASE;
 
 function DashboardAdmin() {
   const [dashboards, setDashboards] = useState([]);

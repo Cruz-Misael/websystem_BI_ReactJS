@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/teams_settings.css';
 import logo from '../assets/logo_personalizado.png';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_FIREBASE;
 
 function Teams() {
     const [teams, setTeams] = useState([]);

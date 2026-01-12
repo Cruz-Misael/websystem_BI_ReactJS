@@ -7,8 +7,8 @@ import logo from '../assets/logo_personalizado.png';
 import ChatWidget from "../components/AIAssistantChat/chat_widget";
 
 
-const API_BASE_URL = process.env.REACT_APP_AUTH;
-const API_BASE_URL_CLICKS = process.env.REACT_APP_API_URL_CLICKS;
+const API_BASE_URL = process.env.REACT_APP_FIREBASE;
+const API_BASE_URL_CLICKS = process.env.REACT_APP_MARIADB;
 
 // Componente único com visual de barras para todos os dashboards
 const DashboardVisual = () => {
